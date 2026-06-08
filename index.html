@@ -1,132 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiniela Familiar Mundial 2026</title>
-    <!-- Tailwind CSS para diseño Premium -->
-    <script src="https://jsdelivr.net"></script>
-    <style>
-        .blur-user { filter: blur(3px); opacity: 0.5; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pronostix - Mundial FIFA 2026</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="manifest" href="manifest.json">
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen pb-16">
-
-    <!-- Encabezado Principal -->
-    <header class="bg-gradient-to-r from-purple-800 to-indigo-950 text-white text-center py-6 px-4 shadow-lg mb-6">
-        <h1 class="text-3xl font-extrabold tracking-wider">⚽ QUINIELA FAMILIAR 2026 🏆</h1>
-        <p class="text-xs text-indigo-200 mt-1 uppercase tracking-widest">Administración Profesional en Tiempo Real</p>
-    </header>
-
-    <!-- Contenedor de Navegación Móvil/PC -->
-    <nav class="max-w-4xl mx-auto px-4 grid grid-cols-4 gap-1 md:gap-2 mb-6">
-        <button onclick="switchTab('registro')" class="tab-btn bg-indigo-600 hover:bg-indigo-500 py-2.5 px-1 text-center text-xs md:text-sm font-bold rounded-lg shadow-md transition-all text-white">👤 Registro</button>
-        <button onclick="switchTab('partidos')" class="tab-btn bg-slate-800 hover:bg-slate-700 py-2.5 px-1 text-center text-xs md:text-sm font-bold rounded-lg shadow-md transition-all text-slate-300">📊 Pronósticos</button>
-        <button onclick="switchTab('posiciones')" class="tab-btn bg-slate-800 hover:bg-slate-700 py-2.5 px-1 text-center text-xs md:text-sm font-bold rounded-lg shadow-md transition-all text-slate-300">🏅 Tabla</button>
-        <button onclick="switchTab('ayuda')" class="tab-btn bg-slate-800 hover:bg-slate-700 py-2.5 px-1 text-center text-xs md:text-sm font-bold rounded-lg shadow-md transition-all text-slate-300">❓ Reglas/FAQ</button>
-    </nav>
-
-    <main class="max-w-4xl mx-auto px-4">
-
-        <!-- PESTAÑA 1: REGISTRO Y LOGIN -->
-        <section id="tab-registro" class="tab-content bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
-            <h2 class="text-xl font-bold text-indigo-400 mb-4 flex items-center gap-2">👤 Registro de Participante</h2>
-            <p class="text-xs text-slate-400 mb-6">Ingresa un usuario y contraseña únicos. Tu cuenta iniciará como "Pendiente" hasta que realices el pago simbólico al administrador.</p>
-            <form id="registerForm" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Nombre de Usuario</label>
-                    <input type="text" id="username" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-indigo-500 text-white" placeholder="Ej: TioAlberto" required>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Contraseña</label>
-                    <input type="password" id="password" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm focus:outline-none focus:border-indigo-500 text-white" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm shadow-md cursor-pointer">Registrarme e Iniciar Juego</button>
-            </form>
-        </section>
-
-        <!-- PESTAÑA 2: PRONÓSTICOS -->
-        <section id="tab-partidos" class="tab-content hidden space-y-4">
-            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 mb-2 flex justify-between items-center">
-                <div>
-                    <span class="text-xs text-slate-400 block uppercase tracking-wider">Usuario Activo:</span>
-                    <span id="activeUserLabel" class="text-sm font-bold text-indigo-300">Ninguno (Regístrate primero)</span>
-                </div>
-                <div class="text-right">
-                    <span class="text-xs text-slate-400 block uppercase tracking-wider">Tu Estatus:</span>
-                    <span id="activeStatusLabel" class="text-xs bg-amber-500/20 text-amber-400 font-bold px-2.5 py-0.5 rounded-full border border-amber-500/30">Desconectado</span>
-                </div>
-            </div>
-
-            <!-- Tarjeta de Partido de Ejemplo -->
-            <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
-                <div class="bg-slate-700/40 px-4 py-2 flex justify-between items-center text-xs">
-                    <span class="text-slate-400 font-medium">Fase de Grupos • Grupo A</span>
-                    <span class="text-amber-400 font-bold flex items-center gap-1">⏰ Bloquea: Antes del silbatazo inicial</span>
-                </div>
-                <div class="p-6 flex items-center justify-between gap-4">
-                    <div class="flex flex-col items-center flex-1">
-                        <span class="text-3xl mb-1">🇲🇽</span>
-                        <span class="text-sm font-bold text-center">México</span>
-                        <input type="number" min="0" id="pron-loc-1" class="w-14 bg-slate-900 border border-slate-700 text-center rounded-lg p-2 mt-2 font-bold text-lg" placeholder="0">
-                    </div>
-                    <div class="text-center font-bold text-slate-500 text-xs self-center px-2">VS</div>
-                    <div class="flex flex-col items-center flex-1">
-                        <span class="text-3xl mb-1">🇺🇸</span>
-                        <span class="text-sm font-bold text-center">Estados Unidos</span>
-                        <input type="number" min="0" id="pron-vis-1" class="w-14 bg-slate-900 border border-slate-700 text-center rounded-lg p-2 mt-2 font-bold text-lg" placeholder="0">
-                    </div>
-                </div>
-                <div class="p-4 bg-slate-900/50 border-t border-slate-700/50 flex justify-end">
-                    <button onclick="savePrediction(1)" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer shadow">Guardar Pronóstico</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- PESTAÑA 3: TABLA DE POSICIONES Y FINANZAS -->
-        <section id="tab-posiciones" class="tab-content hidden space-y-6">
-            <!-- Bloque de Resumen Financiero Dinámico -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center shadow">
-                    <span class="text-xs text-slate-400 block uppercase font-medium">Pozo Total</span>
-                    <span id="fin-total" class="text-xl font-black text-emerald-400 mt-1 block">$0.00</span>
-                </div>
-                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center shadow">
-                    <span class="text-xs text-slate-400 block uppercase font-medium">1º Lugar (50%)</span>
-                    <span id="fin-p1" class="text-xl font-black text-indigo-400 mt-1 block">$0.00</span>
-                </div>
-                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center shadow">
-                    <span class="text-xs text-slate-400 block uppercase font-medium">2º Lugar (25%)</span>
-                    <span id="fin-p2" class="text-xl font-black text-slate-300 mt-1 block">$0.00</span>
-                </div>
-                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 text-center shadow">
-                    <span class="text-xs text-slate-400 block uppercase font-medium">Organizador (10%)</span>
-                    <span id="fin-casa" class="text-xl font-black text-purple-400 mt-1 block">$0.00</span>
-                </div>
-            </div>
-
-            <!-- Tabla de Líderes -->
-            <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
-                <div class="p-4 bg-slate-700/30 border-b border-slate-700 flex justify-between items-center">
-                    <h3 class="font-bold text-sm tracking-wide text-slate-300 uppercase">🏆 Posiciones en Tiempo Real</h3>
-                    <span class="text-xs text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded-md">Mundial 2026</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="bg-slate-900/40 text-slate-400 font-semibold text-xs border-b border-slate-700">
-                                <th class="p-4 w-12 text-center">Pos</th>
-                                <th class="p-4">Usuario</th>
-                                <th class="p-4 text-center">Estatus</th>
-                                <th class="p-4 text-center">Pts</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-body">
-                            <!-- Fila de ejemplo con incentivo visual (Pendiente) -->
-                            <tr class="border-b border-slate-700/50 hover:bg-slate-700/20 bg-slate-900/10">
-                                <td class="p-4 text-center font-bold text-amber-500">1</td>
-                                <td class="p-4 font-bold text-slate-300 blur-user">PrimoIncógnito 🔒</td>
-                                <td class="p-4 text-center"><span class="text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Pendiente</span></td>
-                                <td class="p-4 text-center font-black text-slate-500">--</td>
-                            </tr>
-                            <tr class="border-b border-slate-700/50 hover:bg-slate-700/20">
+<body class="bg-slate-100">
+<div class="max-w-5xl mx-auto p-6">
+<h1 class="text-4xl font-bold">🏆 Pronostix</h1>
+<p class="text-lg">Mundial FIFA 2026</p>
+<div id="app" class="mt-6"></div>
+</div>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

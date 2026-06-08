@@ -1,0 +1,6 @@
+{
+  "name": "Pronostix",
+  "short_name": "Pronostix",
+  "start_url": "./",
+  "display": "standalone"
+}
