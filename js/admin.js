@@ -41,27 +41,75 @@ async function loadAdmin() {
     <h2 class="text-xl font-bold mb-3">
       ⚙️ Configuración
     </h2>
-
-    <div class="border rounded-xl p-4">
-      <label class="block mb-2">Nombre del torneo</label>
-      <input id="cfgTournament" class="border rounded p-2 w-full mb-3" value="${settings.tournament_name}">
-
-      <label class="block mb-2">Costo de inscripción</label>
-      <input id="cfgEntryFee" type="number" step="0.01" class="border rounded p-2 w-full mb-3" value="${settings.entry_fee}">
-
-      <label class="block mb-2">% Administrador</label>
-      <input id="cfgAdmin" type="number" step="0.01" class="border rounded p-2 w-full mb-3" value="${settings.admin_percentage}">
-
-      <label class="block mb-2">% Primer Lugar</label>
-      <input id="cfgFirst" type="number" step="0.01" class="border rounded p-2 w-full mb-3" value="${settings.first_place_percentage}">
-
-      <label class="block mb-2">% Segundo Lugar</label>
-      <input id="cfgSecond" type="number" step="0.01" class="border rounded p-2 w-full mb-3" value="${settings.second_place_percentage}">
-
-      <label class="block mb-2">% Tercer Lugar</label>
-      <input id="cfgThird" type="number" step="0.01" class="border rounded p-2 w-full mb-3" value="${settings.third_place_percentage}">
-
-      <button onclick="saveSettings()" class="bg-emerald-600 text-white rounded px-4 py-2">
+    <div class="border rounded-xl p-4 bg-white">
+      <label class="block mb-2 font-medium">Nombre del torneo</label>
+      <input
+        id="cfgTournament"
+        class="border rounded p-2 w-full mb-4"
+        value="${settings.tournament_name}"
+      >
+    
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block mb-2 font-medium">Costo de inscripción</label>
+          <input
+            id="cfgEntryFee"
+            type="number"
+            step="0.01"
+            class="border rounded p-2 w-full"
+            value="${settings.entry_fee}"
+          >
+        </div>
+    
+        <div>
+          <label class="block mb-2 font-medium">% Administrador</label>
+          <input
+            id="cfgAdmin"
+            type="number"
+            step="0.01"
+            class="border rounded p-2 w-full"
+            value="${settings.admin_percentage}"
+          >
+        </div>
+    
+        <div>
+          <label class="block mb-2 font-medium">% Primer lugar</label>
+          <input
+            id="cfgFirst"
+            type="number"
+            step="0.01"
+            class="border rounded p-2 w-full"
+            value="${settings.first_place_percentage}"
+          >
+        </div>
+    
+        <div>
+          <label class="block mb-2 font-medium">% Segundo lugar</label>
+          <input
+            id="cfgSecond"
+            type="number"
+            step="0.01"
+            class="border rounded p-2 w-full"
+            value="${settings.second_place_percentage}"
+          >
+        </div>
+    
+        <div>
+          <label class="block mb-2 font-medium">% Tercer lugar</label>
+          <input
+            id="cfgThird"
+            type="number"
+            step="0.01"
+            class="border rounded p-2 w-full"
+            value="${settings.third_place_percentage}"
+          >
+        </div>
+      </div>
+    
+      <button
+        onclick="saveSettings()"
+        class="bg-emerald-600 text-white rounded-xl px-4 py-3 w-full font-bold mt-5"
+      >
         Guardar configuración
       </button>
     </div>
