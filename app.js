@@ -3,6 +3,8 @@ const client = supabase.createClient(
     SUPABASE_ANON_KEY
 );
 
+console.log("APP CARGADA");
+
 async function sha256(text) {
 
     const data = new TextEncoder().encode(text);
@@ -13,63 +15,79 @@ async function sha256(text) {
     );
 
     return Array
-    .from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
+        .from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
 }
-
-document
-.getElementById("registerBtn")
-.addEventListener("click", registerUser);
 
 async function registerUser() {
 
     try {
 
         const username =
-        document.getElementById("username").value.trim();
+            document
+                .getElementById("username")
+                .value
+                .trim();
 
         const displayName =
-        document.getElementById("displayName").value.trim();
+            document
+                .getElementById("displayName")
+                .value
+                .trim();
 
         const password =
-        document.getElementById("password").value;
+            document
+                .getElementById("password")
+                .value;
 
-        console.log("username", username);
-        console.log("displayName", displayName);
+        console.log("username:", username);
+        console.log("displayName:", displayName);
 
-        const { data: existingUser, error: existingError } =
-        await client
-        .from("users")
-        .select("id")
-        .eq("username", username)
-        .maybeSingle();
+        if (!username || !displayName || !password) {
+            alert("Todos los campos son obligatorios");
+            return;
+        }
 
-        console.log("existingUser", existingUser);
-        console.log("existingError", existingError);
+        const {
+            data: existingUser,
+            error: existingError
+        } = await client
+            .from("users")
+            .select("id")
+            .eq("username", username)
+            .maybeSingle();
+
+        console.log("existingUser:", existingUser);
+        console.log("existingError:", existingError);
+
+        if (existingError) {
+            alert(JSON.stringify(existingError));
+            return;
+        }
 
         if (existingUser) {
-            alert("Usuario ya existe");
+            alert("El usuario ya existe");
             return;
         }
 
         const hash = await sha256(password);
 
-        console.log("hash", hash);
+        console.log("hash:", hash);
 
         const {
             data: userData,
             error: userError
         } = await client
-        .from("users")
-        .insert({
-            username,
-            display_name: displayName
-        })
-        .select();
+            .from("users")
+            .insert({
+                username: username,
+                display_name: displayName
+            })
+            .select();
 
-        console.log("userData", userData);
-        console.log("userError", userError);
+        console.log("userData:", userData);
+        console.log("userError:", userError);
 
         if (userError) {
             alert(JSON.stringify(userError));
@@ -82,90 +100,52 @@ async function registerUser() {
             data: credentialData,
             error: credentialError
         } = await client
-        .from("credentials")
-        .insert({
-            user_id: userId,
-            password_hash: hash
-        })
-        .select();
+            .from("credentials")
+            .insert({
+                user_id: userId,
+                password_hash: hash
+            })
+            .select();
 
-        console.log("credentialData", credentialData);
-        console.log("credentialError", credentialError);
+        console.log("credentialData:", credentialData);
+        console.log("credentialError:", credentialError);
 
         if (credentialError) {
             alert(JSON.stringify(credentialError));
             return;
         }
 
-        alert("Usuario creado");
+        alert("Usuario creado correctamente");
+
+        document.getElementById("username").value = "";
+        document.getElementById("displayName").value = "";
+        document.getElementById("password").value = "";
 
     } catch (err) {
 
-        console.error(err);
+        console.error("ERROR GENERAL:", err);
         alert(err.message);
 
     }
 }
-    const hash = await sha256(password);
 
-    const {
-        data: userData,
-        error: userError
-    } = await client
-    .from("users")
-    .insert({
-        username,
-        display_name: displayName
-    })
-    .select()
-    .single();
+window.addEventListener("DOMContentLoaded", () => {
 
-    if (userError) {
+    console.log("DOM LISTO");
 
-        output.textContent =
-        JSON.stringify(
-            userError,
-            null,
-            2
-        );
+    const button =
+        document.getElementById("registerBtn");
 
+    console.log("BOTON:", button);
+
+    if (!button) {
+        console.error("No existe registerBtn");
         return;
     }
 
-    const {
-        error: credentialError
-    } = await client
-    .from("credentials")
-    .insert({
-        user_id: userData.id,
-        password_hash: hash
-    });
+    button.addEventListener(
+        "click",
+        registerUser
+    );
 
-    if (credentialError) {
-
-        output.textContent =
-        JSON.stringify(
-            credentialError,
-            null,
-            2
-        );
-
-        return;
-    }
-
-    output.textContent =
-    "Usuario registrado correctamente";
-
-    document
-    .getElementById("username")
-    .value = "";
-
-    document
-    .getElementById("displayName")
-    .value = "";
-
-    document
-    .getElementById("password")
-    .value = "";
-}
-console.log("APP CARGADA");
+});
