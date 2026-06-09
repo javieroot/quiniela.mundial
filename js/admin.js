@@ -30,3 +30,30 @@ async function togglePayment(userId, status) {
   alert("Estado actualizado");
   loadAdmin();
 }
+
+function generateTempPassword() {
+  return "PRX-" + Math.random().toString(36).slice(2, 10).toUpperCase();
+}
+
+async function resetUserPassword(userId, username) {
+  const tempPassword = generateTempPassword();
+  const hash = await sha256(tempPassword);
+
+  const { error: credError } = await client
+    .from("credentials")
+    .update({ password_hash: hash })
+    .eq("user_id", userId);
+
+  if (credError) return alert(credError.message);
+
+  const { error: userError } = await client
+    .from("users")
+    .update({ must_change_password: true })
+    .eq("id", userId);
+
+  if (userError) return alert(userError.message);
+
+  alert(
+    `Contraseña temporal para ${username}:\n\n${tempPassword}\n\nDebe cambiarla al iniciar sesión.`
+  );
+}
