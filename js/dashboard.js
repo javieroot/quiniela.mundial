@@ -19,6 +19,7 @@ function renderDashboard() {
       <button onclick="loadOfficial()" class="bg-blue-600 text-white rounded-xl p-3">Clasificación Oficial</button>
       <button onclick="loadGeneral()" class="bg-indigo-600 text-white rounded-xl p-3">Clasificación General</button>
       <button onclick="loadPredictions()" class="bg-emerald-600 text-white rounded-xl p-3">Mis Pronósticos</button>
+      <button onclick="loadPrizes()" class="bg-green-700 text-white rounded-xl p-3">💰 Premios</button>
       <button onclick="loadSpecials()" class="bg-amber-500 text-white rounded-xl p-3">Especiales</button>
       ${currentUser.is_admin ? `<button onclick="loadAdmin()" class="bg-red-600 text-white rounded-xl p-3 col-span-2">Admin</button>` : ""}
     </div>
