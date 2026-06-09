@@ -71,6 +71,13 @@ async function renderDashboard() {
       </button>
 
       <button
+        onclick="loadSpecials()"
+        class="bg-amber-500 text-white rounded-xl p-3"
+      >
+        Especiales
+      </button>
+      
+      <button
         onclick="loadRules()"
         class="bg-slate-700 text-white rounded-xl p-3"
       >
@@ -83,15 +90,7 @@ async function renderDashboard() {
       >
         ❓ FAQ
       </button>
-
-
-      <button
-        onclick="loadSpecials()"
-        class="bg-amber-500 text-white rounded-xl p-3"
-      >
-        Especiales
-      </button>
-
+      
       ${currentUser.is_admin
         ? `
           <button
