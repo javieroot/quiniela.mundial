@@ -1,18 +1,29 @@
 async function loadAdmin() {
   if (!currentUser.is_admin) return alert("No autorizado");
 
-  const { data: users, error } = await client
-    .from("users")
-    .select("*")
-    .order("created_at");
+const { data, error } = await client
+  .from("settings")
+  .update({
+    tournament_name:
+      document.getElementById("cfgTournament").value,
 
-  if (error) return alert(error.message);
+    entry_fee:
+      Number(document.getElementById("cfgEntryFee").value),
 
-  const { data: settings, error: settingsError } = await client
-    .from("settings")
-    .select("*")
-    .eq("id", 1)
-    .single();
+    admin_percentage: admin,
+
+    first_place_percentage: first,
+
+    second_place_percentage: second,
+
+    third_place_percentage: third
+  })
+  .eq("id", 1)
+  .select();
+
+console.log("SETTINGS UPDATE");
+console.log("DATA:", data);
+console.log("ERROR:", error);
 
   if (settingsError) return alert(settingsError.message);
 
