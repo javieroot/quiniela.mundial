@@ -148,7 +148,7 @@ function loadRules() {
       </div>
 
       <p>
-        Los pronósticos se bloquean 1 minuto antes del inicio de cada partido.
+        Los pronósticos de partidos se bloquean 1 minuto antes del inicio de cada encuentro.
       </p>
 
       <h3 class="font-bold mt-4">Pronósticos Especiales</h3>
@@ -161,19 +161,23 @@ function loadRules() {
       </ul>
 
       <p>
-        Los Pronósticos Especiales se bloquean al iniciar el primer partido del torneo.
+        Los Pronósticos Especiales pueden modificarse hasta el inicio del primer partido del torneo.
       </p>
 
       <h3 class="font-bold mt-4">Desempates</h3>
 
-      <ol class="list-decimal list-inside">
-        <li>Puntos</li>
-        <li>Marcadores exactos</li>
-        <li>Resultados acertados</li>
+      <ol class="list-decimal list-inside space-y-1">
+        <li>Mayor cantidad de puntos totales.</li>
+        <li>Mayor cantidad de puntos obtenidos en Pronósticos Especiales.</li>
+        <li>Mayor cantidad de marcadores exactos acertados.</li>
+        <li>Mayor cantidad de resultados acertados.</li>
+        <li>Fecha más antigua de última modificación de pronósticos.</li>
       </ol>
 
       <p>
-        Si el empate persiste, el premio correspondiente se reparte entre los participantes empatados.
+        Si el empate persiste después de aplicar todos los criterios anteriores,
+        los participantes compartirán la misma posición y cualquier premio
+        correspondiente se repartirá entre ellos.
       </p>
     </div>
   `);
@@ -184,6 +188,7 @@ function loadFAQ() {
     <h2 class="text-xl font-bold mb-4">❓ FAQ</h2>
 
     <div class="space-y-4 text-slate-700">
+
       <div>
         <p class="font-bold">¿Cómo gano puntos?</p>
         <p>
@@ -194,7 +199,8 @@ function loadFAQ() {
       <div>
         <p class="font-bold">¿Cuánto valen los Pronósticos Especiales?</p>
         <p>
-          Campeón = 5 puntos, Subcampeón = 3 puntos, Tercer lugar = 2 puntos y Máximo goleador = 5 puntos.
+          Campeón = 5 puntos, Subcampeón = 3 puntos,
+          Tercer lugar = 2 puntos y Máximo goleador = 5 puntos.
         </p>
       </div>
 
@@ -214,7 +220,9 @@ function loadFAQ() {
 
       <div>
         <p class="font-bold">¿Debo guardar cada partido?</p>
-        <p>No. Usa el botón “Guardar Todo”.</p>
+        <p>
+          No. Utiliza el botón "Guardar Todo" para registrar todos tus cambios.
+        </p>
       </div>
 
       <div>
@@ -227,16 +235,28 @@ function loadFAQ() {
       <div>
         <p class="font-bold">¿Cómo se calculan los premios?</p>
         <p>
-          Los montos mostrados son estimados y se actualizan automáticamente conforme aumenta el número de participantes confirmados.
+          Los montos mostrados son estimados y se actualizan automáticamente conforme aumenta el número de participantes con pago confirmado.
+        </p>
+      </div>
+
+      <div>
+        <p class="font-bold">¿La clasificación se actualiza automáticamente?</p>
+        <p>
+          Sí. La clasificación se actualiza conforme se registran resultados oficiales de los partidos y de los Pronósticos Especiales.
         </p>
       </div>
 
       <div>
         <p class="font-bold">¿Qué pasa si hay empate?</p>
         <p>
-          Se aplican los criterios de desempate. Si el empate persiste, el premio correspondiente se reparte entre los participantes empatados.
+          Los empates se resuelven utilizando, en orden: puntos totales,
+          puntos de Pronósticos Especiales, marcadores exactos,
+          resultados acertados y fecha de última modificación.
+          Si el empate persiste, los participantes compartirán la misma posición
+          y el premio correspondiente se repartirá entre ellos.
         </p>
       </div>
+
     </div>
   `);
 }
