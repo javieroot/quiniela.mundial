@@ -24,6 +24,17 @@ async function calculateLiveStandings(onlyPaid) {
     return [];
   }
 
+  const { data: settings, error: settingsError } = await client
+    .from("settings")
+    .select("*")
+    .eq("id", 1)
+    .single();
+
+  if (settingsError) {
+    alert(settingsError.message);
+    return [];
+  }
+
   const { data: predictions, error: predictionsError } = await client
     .from("predictions")
     .select(`
@@ -172,11 +183,13 @@ async function calculateLiveStandings(onlyPaid) {
       specialPoints: specialPointsByUser[user.id] || 0,
       exacts: exactsByUser[user.id] || 0,
       results: resultsByUser[user.id] || 0,
-      lastUpdate: lastUpdateByUser[user.id]
+      lastUpdate: lastUpdateByUser[user.id],
+      prize: 0
     }))
     .sort(compareStandings);
 
   assignSharedPositions(sortedUsers);
+  assignPrizes(sortedUsers, settings);
 
   return sortedUsers;
 }
@@ -226,6 +239,39 @@ function assignSharedPositions(users) {
   }
 }
 
+function assignPrizes(users, settings) {
+  const participants = users.length;
+
+  const entryFee = Number(settings.entry_fee || 0);
+  const adminPercentage = Number(settings.admin_percentage || 0);
+  const firstPercentage = Number(settings.first_place_percentage || 0);
+  const secondPercentage = Number(settings.second_place_percentage || 0);
+  const thirdPercentage = Number(settings.third_place_percentage || 0);
+
+  const totalPool = participants * entryFee;
+  const adminCommission = totalPool * adminPercentage / 100;
+  const prizePool = totalPool - adminCommission;
+
+  const prizesByPosition = {
+    1: prizePool * firstPercentage / 100,
+    2: prizePool * secondPercentage / 100,
+    3: prizePool * thirdPercentage / 100
+  };
+
+  for (const position of [1, 2, 3]) {
+    const usersInPosition = users.filter(user => user.position === position);
+
+    if (usersInPosition.length === 0) continue;
+
+    const prizeForPosition = prizesByPosition[position] || 0;
+    const prizePerUser = prizeForPosition / usersInPosition.length;
+
+    for (const user of usersInPosition) {
+      user.prize = prizePerUser;
+    }
+  }
+}
+
 function normalizeDate(value) {
   return value ? new Date(value).getTime() : null;
 }
@@ -252,7 +298,14 @@ function isSameText(a, b) {
   return String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
 }
 
+function formatMoney(value) {
+  return `$${Number(value || 0).toFixed(2)}`;
+}
+
 function renderStandings(users, title, official) {
+  const winners = users.filter(user => user.position <= 3 && user.prize > 0);
+  const hasWinners = winners.length > 0;
+
   setContent(`
     <h2 class="text-xl font-bold mb-3">
       ${title}
@@ -264,9 +317,35 @@ function renderStandings(users, title, official) {
       </p>
     ` : `
       <p class="text-sm text-slate-500 mb-3">
-        Esta tabla muestra a todos los participantes. La oficial para premios es la de pagados.
+        Esta tabla muestra a todos los participantes registrados como si todos participaran por premios.
       </p>
     `}
+
+    ${hasWinners ? `
+      <div class="grid md:grid-cols-3 gap-3 mb-5">
+        ${winners.map(user => `
+          <div class="border rounded-xl p-3 bg-slate-50">
+            <p class="text-sm text-slate-500">
+              ${user.position === 1 ? "🥇 Primer lugar" : ""}
+              ${user.position === 2 ? "🥈 Segundo lugar" : ""}
+              ${user.position === 3 ? "🥉 Tercer lugar" : ""}
+            </p>
+
+            <p class="font-bold">
+              ${user.display_name}
+            </p>
+
+            <p class="text-sm">
+              ${user.points} pts
+            </p>
+
+            <p class="font-bold text-emerald-700">
+              ${formatMoney(user.prize)}
+            </p>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
 
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
@@ -275,6 +354,7 @@ function renderStandings(users, title, official) {
             <th class="text-left py-2 px-2">Pos</th>
             <th class="text-left py-2 px-2">Participante</th>
             <th class="text-left py-2 px-2">Pts</th>
+            <th class="text-left py-2 px-2">Premio</th>
             <th class="text-left py-2 px-2">Partidos</th>
             <th class="text-left py-2 px-2">Especiales</th>
             <th class="text-left py-2 px-2">Exactos</th>
@@ -286,14 +366,14 @@ function renderStandings(users, title, official) {
         <tbody>
           ${users.length === 0 ? `
             <tr>
-              <td colspan="${official ? 7 : 8}" class="py-4 text-slate-500">
+              <td colspan="${official ? 8 : 9}" class="py-4 text-slate-500">
                 No hay participantes para mostrar.
               </td>
             </tr>
           ` : ""}
 
           ${users.map(user => `
-            <tr class="border-b">
+            <tr class="border-b ${user.position <= 3 ? "bg-emerald-50" : ""}">
               <td class="py-2 px-2 font-bold">
                 ${user.position}
               </td>
@@ -304,6 +384,10 @@ function renderStandings(users, title, official) {
 
               <td class="py-2 px-2 font-bold">
                 ${user.points}
+              </td>
+
+              <td class="py-2 px-2 font-bold">
+                ${user.prize > 0 ? formatMoney(user.prize) : "-"}
               </td>
 
               <td class="py-2 px-2">
