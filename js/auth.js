@@ -62,11 +62,12 @@ async function loginUser() {
   if (!credential || credential.password_hash !== hash) return alert("Contraseña incorrecta");
 
   setCurrentUser(user);
-  
+
   if (user.must_change_password) {
-  renderForcePasswordChange();
-  return;
+    renderForcePasswordChange();
+    return;
   }
+  
   renderApp();
 }
 
