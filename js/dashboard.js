@@ -71,13 +71,6 @@ async function renderDashboard() {
       </button>
 
       <button
-        onclick="loadPrizes()"
-        class="bg-green-700 text-white rounded-xl p-3"
-      >
-        💰 Premios
-      </button>
-
-      <button
         onclick="loadRules()"
         class="bg-slate-700 text-white rounded-xl p-3"
       >
