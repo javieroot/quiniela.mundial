@@ -102,7 +102,17 @@ async function saveSpecials() {
   if (!champion || !runnerUp || !thirdPlace) {
     return alert("Selecciona campeón, subcampeón y tercer lugar");
   }
-
+  
+  if (
+  champion === runnerUp ||
+  champion === thirdPlace ||
+  runnerUp === thirdPlace
+  ) {
+    return alert(
+      "Campeón, subcampeón y tercer lugar deben ser equipos diferentes"
+    );
+  }
+  
   const { error } = await client
     .from("special_predictions")
     .upsert({
