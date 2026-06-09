@@ -11,6 +11,7 @@ async function loadAdmin() {
         <p class="font-bold">${u.display_name}</p>
         <p class="text-sm text-slate-600">${u.username} - ${u.payment_status}</p>
         <button onclick="togglePayment('${u.id}', '${u.payment_status}')" class="bg-blue-600 text-white rounded px-3 py-1 mt-2">Cambiar pago</button>
+        <button onclick="resetUserPassword('${u.id}', '${u.username}')" class="bg-slate-700 text-white rounded px-3 py-1 mt-2 ml-2">Resetear contraseña</button>
       </div>
     `).join("")}
   `);
