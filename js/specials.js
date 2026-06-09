@@ -31,6 +31,32 @@ async function loadSpecials() {
 
   if (playersError) return alert(playersError.message);
 
+  const { data: firstMatch, error: firstMatchError } = await client
+    .from("matches")
+    .select("match_date")
+    .order("match_date")
+    .limit(1)
+    .single();
+
+  if (firstMatchError) return alert(firstMatchError.message);
+
+  const specialsLocked =
+    new Date() >= new Date(firstMatch.match_date);
+
+  if (specialsLocked) {
+    setContent(`
+      <h2 class="text-xl font-bold mb-3">
+        Pronósticos Especiales
+      </h2>
+
+      <div class="bg-red-100 text-red-700 rounded-xl p-4">
+        Los Pronósticos Especiales han sido cerrados.
+      </div>
+    `);
+
+    return;
+  }
+
   const teamOptions = (selectedValue) => `
     <option value="">Selecciona equipo</option>
     ${(teams || []).map(t => `
