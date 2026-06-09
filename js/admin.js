@@ -179,26 +179,46 @@ async function saveMatchResults() {
 
     if (!homeInput || !awayInput) continue;
 
-    const home = homeInput.value;
-    const away = awayInput.value;
+    const homeValue = homeInput.value.trim();
+    const awayValue = awayInput.value.trim();
 
-    if (home === "" || away === "") continue;
+    if (homeValue === "" && awayValue === "") continue;
 
-    const { error: updateError } = await client
+    if (homeValue === "" || awayValue === "") {
+      return alert("Debes capturar ambos marcadores del partido.");
+    }
+
+    const homeScore = Number(homeValue);
+    const awayScore = Number(awayValue);
+
+    if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore) || homeScore < 0 || awayScore < 0) {
+      return alert("Los marcadores deben ser números enteros mayores o iguales a 0.");
+    }
+
+    const { data: updated, error: updateError } = await client
       .from("matches")
       .update({
-        home_score: Number(home),
-        away_score: Number(away)
+        home_score: homeScore,
+        away_score: awayScore
       })
-      .eq("id", match.id);
+      .eq("id", match.id)
+      .select();
 
     if (updateError) return alert(updateError.message);
+
+    if (!updated || updated.length === 0) {
+      return alert(`No se pudo actualizar el partido ${match.id}. Revisa permisos o RLS.`);
+    }
 
     saved++;
   }
 
+  if (saved === 0) {
+    return alert("No hay resultados nuevos para guardar.");
+  }
+
   alert(`${saved} resultado(s) guardado(s)`);
-  loadAdmin();
+  await loadAdmin();
 }
 
 async function togglePayment(userId, status) {
