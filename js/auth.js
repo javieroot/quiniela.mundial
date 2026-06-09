@@ -1,9 +1,9 @@
 async function renderAuth() {
 
-  const { data: settings } = await client
-    .from("settings")
-    .select("tournament_name")
-    .eq("id", 1)
+  const { data: activeTournament } = await client
+    .from("tournaments")
+    .select("name")
+    .eq("is_active", true)
     .single();
 
   render(`
@@ -14,84 +14,35 @@ async function renderAuth() {
       </h1>
 
       <p class="text-slate-500 mb-6">
-        ${settings?.tournament_name || ""}
+        ${activeTournament?.name || ""}
       </p>
 
       <h2 class="font-bold mb-2">
         Entrar
       </h2>
 
-      <input
-        id="loginUsername"
-        class="border p-2 rounded w-full mb-2"
-        placeholder="Usuario"
-      >
+      <input id="loginUsername" class="border p-2 rounded w-full mb-2" placeholder="Usuario">
 
       <div class="flex gap-2 mb-3">
-
-        <input
-          id="loginPassword"
-          class="border p-2 rounded flex-1"
-          type="password"
-          placeholder="Contraseña"
-        >
-
-        <button
-          type="button"
-          onclick="togglePassword('loginPassword')"
-          class="bg-slate-700 text-white px-3 rounded"
-        >
-          👁️
-        </button>
-
+        <input id="loginPassword" class="border p-2 rounded flex-1" type="password" placeholder="Contraseña">
+        <button type="button" onclick="togglePassword('loginPassword')" class="bg-slate-700 text-white px-3 rounded">👁️</button>
       </div>
 
-      <button
-        onclick="loginUser()"
-        class="bg-blue-600 text-white rounded p-2 w-full mb-6"
-      >
+      <button onclick="loginUser()" class="bg-blue-600 text-white rounded p-2 w-full mb-6">
         Entrar
       </button>
 
-      <h2 class="font-bold mb-2">
-        Registro
-      </h2>
+      <h2 class="font-bold mb-2">Registro</h2>
 
-      <input
-        id="username"
-        class="border p-2 rounded w-full mb-2"
-        placeholder="Usuario"
-      >
-
-      <input
-        id="displayName"
-        class="border p-2 rounded w-full mb-2"
-        placeholder="Nombre visible"
-      >
+      <input id="username" class="border p-2 rounded w-full mb-2" placeholder="Usuario">
+      <input id="displayName" class="border p-2 rounded w-full mb-2" placeholder="Nombre visible">
 
       <div class="flex gap-2 mb-3">
-
-        <input
-          id="password"
-          class="border p-2 rounded flex-1"
-          type="password"
-          placeholder="Contraseña"
-        >
-
-        <button
-          type="button"
-          onclick="togglePassword('password')"
-          class="bg-slate-700 text-white px-3 rounded"
-        >
-          👁️
-        </button>
-
+        <input id="password" class="border p-2 rounded flex-1" type="password" placeholder="Contraseña">
+        <button type="button" onclick="togglePassword('password')" class="bg-slate-700 text-white px-3 rounded">👁️</button>
       </div>
 
-      <button
-        onclick="registerUser()"
-        class="bg-emerald-600 text-white rounded p-2 w-full"
-      >
+      <button onclick="registerUser()" class="bg-emerald-600 text-white rounded p-2 w-full">
         Registrar
       </button>
 
@@ -191,47 +142,16 @@ function renderForcePasswordChange() {
       </p>
 
       <div class="flex gap-2 mb-2">
-
-        <input
-          id="newPassword"
-          type="password"
-          class="border p-2 rounded flex-1"
-          placeholder="Nueva contraseña"
-        >
-
-        <button
-          type="button"
-          onclick="togglePassword('newPassword')"
-          class="bg-slate-700 text-white px-3 rounded"
-        >
-          👁️
-        </button>
-
+        <input id="newPassword" type="password" class="border p-2 rounded flex-1" placeholder="Nueva contraseña">
+        <button type="button" onclick="togglePassword('newPassword')" class="bg-slate-700 text-white px-3 rounded">👁️</button>
       </div>
 
       <div class="flex gap-2 mb-3">
-
-        <input
-          id="confirmPassword"
-          type="password"
-          class="border p-2 rounded flex-1"
-          placeholder="Confirmar contraseña"
-        >
-
-        <button
-          type="button"
-          onclick="togglePassword('confirmPassword')"
-          class="bg-slate-700 text-white px-3 rounded"
-        >
-          👁️
-        </button>
-
+        <input id="confirmPassword" type="password" class="border p-2 rounded flex-1" placeholder="Confirmar contraseña">
+        <button type="button" onclick="togglePassword('confirmPassword')" class="bg-slate-700 text-white px-3 rounded">👁️</button>
       </div>
 
-      <button
-        onclick="changeTemporaryPassword()"
-        class="bg-blue-600 text-white rounded p-2 w-full"
-      >
+      <button onclick="changeTemporaryPassword()" class="bg-blue-600 text-white rounded p-2 w-full">
         Actualizar contraseña
       </button>
 
@@ -243,13 +163,8 @@ async function changeTemporaryPassword() {
   const newPassword = document.getElementById("newPassword").value;
   const confirmPassword = document.getElementById("confirmPassword").value;
 
-  if (newPassword.length < 6) {
-    return alert("La contraseña debe tener mínimo 6 caracteres");
-  }
-
-  if (newPassword !== confirmPassword) {
-    return alert("Las contraseñas no coinciden");
-  }
+  if (newPassword.length < 6) return alert("La contraseña debe tener mínimo 6 caracteres");
+  if (newPassword !== confirmPassword) return alert("Las contraseñas no coinciden");
 
   const hash = await sha256(newPassword);
 
@@ -278,11 +193,7 @@ async function changeTemporaryPassword() {
 
 function togglePassword(inputId) {
   const input = document.getElementById(inputId);
-
   if (!input) return;
 
-  input.type =
-    input.type === "password"
-      ? "text"
-      : "password";
+  input.type = input.type === "password" ? "text" : "password";
 }
