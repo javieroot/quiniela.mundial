@@ -41,9 +41,6 @@ async function registerUser() {
                 .getElementById("password")
                 .value;
 
-        console.log("username:", username);
-        console.log("displayName:", displayName);
-
         if (!username || !displayName || !password) {
             alert("Todos los campos son obligatorios");
             return;
@@ -58,9 +55,6 @@ async function registerUser() {
             .eq("username", username)
             .maybeSingle();
 
-        console.log("existingUser:", existingUser);
-        console.log("existingError:", existingError);
-
         if (existingError) {
             alert(JSON.stringify(existingError));
             return;
@@ -73,8 +67,6 @@ async function registerUser() {
 
         const hash = await sha256(password);
 
-        console.log("hash:", hash);
-
         const {
             data: userData,
             error: userError
@@ -86,9 +78,6 @@ async function registerUser() {
             })
             .select();
 
-        console.log("userData:", userData);
-        console.log("userError:", userError);
-
         if (userError) {
             alert(JSON.stringify(userError));
             return;
@@ -97,18 +86,13 @@ async function registerUser() {
         const userId = userData[0].id;
 
         const {
-            data: credentialData,
             error: credentialError
         } = await client
             .from("credentials")
             .insert({
                 user_id: userId,
                 password_hash: hash
-            })
-            .select();
-
-        console.log("credentialData:", credentialData);
-        console.log("credentialError:", credentialError);
+            });
 
         if (credentialError) {
             alert(JSON.stringify(credentialError));
@@ -123,7 +107,79 @@ async function registerUser() {
 
     } catch (err) {
 
-        console.error("ERROR GENERAL:", err);
+        console.error(err);
+        alert(err.message);
+
+    }
+}
+
+async function loginUser() {
+
+    try {
+
+        const username =
+            document
+                .getElementById("loginUsername")
+                .value
+                .trim();
+
+        const password =
+            document
+                .getElementById("loginPassword")
+                .value;
+
+        const hash =
+            await sha256(password);
+
+        const {
+            data: user,
+            error: userError
+        } = await client
+            .from("users")
+            .select("*")
+            .eq("username", username)
+            .single();
+
+        if (userError || !user) {
+
+            alert("Usuario no encontrado");
+            return;
+        }
+
+        const {
+            data: credential,
+            error: credentialError
+        } = await client
+            .from("credentials")
+            .select("*")
+            .eq("user_id", user.id)
+            .single();
+
+        if (credentialError || !credential) {
+
+            alert("Credenciales inválidas");
+            return;
+        }
+
+        if (credential.password_hash !== hash) {
+
+            alert("Contraseña incorrecta");
+            return;
+        }
+
+        localStorage.setItem(
+            "pronostix_user",
+            JSON.stringify(user)
+        );
+
+        alert(
+            "Bienvenido " +
+            user.display_name
+        );
+
+    } catch (err) {
+
+        console.error(err);
         alert(err.message);
 
     }
@@ -133,19 +189,24 @@ window.addEventListener("DOMContentLoaded", () => {
 
     console.log("DOM LISTO");
 
-    const button =
+    const registerBtn =
         document.getElementById("registerBtn");
 
-    console.log("BOTON:", button);
+    const loginBtn =
+        document.getElementById("loginBtn");
 
-    if (!button) {
-        console.error("No existe registerBtn");
-        return;
+    if (registerBtn) {
+        registerBtn.addEventListener(
+            "click",
+            registerUser
+        );
     }
 
-    button.addEventListener(
-        "click",
-        registerUser
-    );
+    if (loginBtn) {
+        loginBtn.addEventListener(
+            "click",
+            loginUser
+        );
+    }
 
 });
