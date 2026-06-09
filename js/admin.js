@@ -130,9 +130,18 @@ async function loadAdmin() {
           ${adminResultsExpanded ? "▲" : "▼"}
         </span>
       </button>
-
       ${adminResultsExpanded ? `
         <div class="mt-4 space-y-3">
+            ${(matches || []).length ? `
+            <div class="sticky top-0 bg-slate-50 pb-3 z-10">
+              <button
+                onclick="saveMatchResults()"
+                class="bg-blue-600 text-white rounded-xl px-4 py-3 w-full font-bold shadow"
+              >
+                💾 Guardar resultados
+              </button>
+            </div>
+          ` : ""}
           ${(matches || []).length ? (matches || []).map(match => `
             <div class="border rounded-xl p-3 bg-white">
               <p class="font-bold">
@@ -172,15 +181,6 @@ async function loadAdmin() {
           `).join("") : `
             <p class="text-slate-500">No hay partidos cargados.</p>
           `}
-
-          ${(matches || []).length ? `
-            <button
-              onclick="saveMatchResults()"
-              class="bg-blue-600 text-white rounded-xl px-4 py-3 w-full font-bold"
-            >
-              💾 Guardar resultados
-            </button>
-          ` : ""}
         </div>
       ` : ""}
     </div>
