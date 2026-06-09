@@ -219,7 +219,7 @@ function assignSharedPositions(users) {
       normalizeDate(previous.lastUpdate) === normalizeDate(current.lastUpdate);
 
     if (!tied) {
-      currentPosition = i + 1;
+      currentPosition++;
     }
 
     current.position = currentPosition;
