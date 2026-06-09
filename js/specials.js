@@ -23,66 +23,58 @@ async function loadSpecials() {
 
   if (teamsError) return alert(teamsError.message);
 
+  const { data: players, error: playersError } = await client
+    .from("players")
+    .select("name")
+    .eq("tournament_id", activeTournament.id)
+    .order("name");
+
+  if (playersError) return alert(playersError.message);
+
   const teamOptions = (selectedValue) => `
     <option value="">Selecciona equipo</option>
     ${(teams || []).map(t => `
-      <option
-        value="${t.name}"
-        ${selectedValue === t.name ? "selected" : ""}
-      >
+      <option value="${t.name}" ${selectedValue === t.name ? "selected" : ""}>
         ${t.name}
       </option>
     `).join("")}
   `;
 
+  const playerOptions = (selectedValue) => `
+    <option value="">Selecciona goleador</option>
+    ${(players || []).map(p => `
+      <option value="${p.name}" ${selectedValue === p.name ? "selected" : ""}>
+        ${p.name}
+      </option>
+    `).join("")}
+  `;
+
   setContent(`
-    <h2 class="text-xl font-bold mb-3">
-      Pronósticos Especiales
-    </h2>
+    <h2 class="text-xl font-bold mb-3">Pronósticos Especiales</h2>
 
     <p class="text-sm text-slate-500 mb-3">
       Torneo: ${activeTournament.name}
     </p>
 
-    <label class="block text-sm font-bold mb-1">
-      Campeón
-    </label>
-    <select
-      id="champion"
-      class="border rounded p-2 w-full mb-2"
-    >
+    <label class="block text-sm font-bold mb-1">Campeón</label>
+    <select id="champion" class="border rounded p-2 w-full mb-2">
       ${teamOptions(special?.champion ?? "")}
     </select>
 
-    <label class="block text-sm font-bold mb-1">
-      Subcampeón
-    </label>
-    <select
-      id="runnerUp"
-      class="border rounded p-2 w-full mb-2"
-    >
+    <label class="block text-sm font-bold mb-1">Subcampeón</label>
+    <select id="runnerUp" class="border rounded p-2 w-full mb-2">
       ${teamOptions(special?.runner_up ?? "")}
     </select>
 
-    <label class="block text-sm font-bold mb-1">
-      Tercer lugar
-    </label>
-    <select
-      id="thirdPlace"
-      class="border rounded p-2 w-full mb-2"
-    >
+    <label class="block text-sm font-bold mb-1">Tercer lugar</label>
+    <select id="thirdPlace" class="border rounded p-2 w-full mb-2">
       ${teamOptions(special?.third_place ?? "")}
     </select>
 
-    <label class="block text-sm font-bold mb-1">
-      Máximo goleador
-    </label>
-    <input
-      id="topScorer"
-      class="border rounded p-2 w-full mb-3"
-      placeholder="Máximo goleador"
-      value="${special?.top_scorer ?? ""}"
-    >
+    <label class="block text-sm font-bold mb-1">Máximo goleador</label>
+    <select id="topScorer" class="border rounded p-2 w-full mb-3">
+      ${playerOptions(special?.top_scorer ?? "")}
+    </select>
 
     <button
       onclick="saveSpecials()"
@@ -97,22 +89,22 @@ async function saveSpecials() {
   const champion = document.getElementById("champion").value;
   const runnerUp = document.getElementById("runnerUp").value;
   const thirdPlace = document.getElementById("thirdPlace").value;
-  const topScorer = document.getElementById("topScorer").value.trim();
+  const topScorer = document.getElementById("topScorer").value;
 
-  if (!champion || !runnerUp || !thirdPlace) {
-    return alert("Selecciona campeón, subcampeón y tercer lugar");
+  if (!champion || !runnerUp || !thirdPlace || !topScorer) {
+    return alert("Completa todos los pronósticos especiales");
   }
-  
+
   if (
-  champion === runnerUp ||
-  champion === thirdPlace ||
-  runnerUp === thirdPlace
+    champion === runnerUp ||
+    champion === thirdPlace ||
+    runnerUp === thirdPlace
   ) {
     return alert(
       "Campeón, subcampeón y tercer lugar deben ser equipos diferentes"
     );
   }
-  
+
   const { error } = await client
     .from("special_predictions")
     .upsert({
