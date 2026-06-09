@@ -303,8 +303,27 @@ function formatMoney(value) {
 }
 
 function renderStandings(users, title, official) {
-  const winners = users.filter(user => user.position <= 3 && user.prize > 0);
-  const hasWinners = winners.length > 0;
+  const firstPlace = users.filter(user => user.position === 1 && user.prize > 0);
+  const secondPlace = users.filter(user => user.position === 2 && user.prize > 0);
+  const thirdPlace = users.filter(user => user.position === 3 && user.prize > 0);
+
+  const prizeGroups = [
+    {
+      position: 1,
+      title: "🥇 Primer lugar",
+      users: firstPlace
+    },
+    {
+      position: 2,
+      title: "🥈 Segundo lugar",
+      users: secondPlace
+    },
+    {
+      position: 3,
+      title: "🥉 Tercer lugar",
+      users: thirdPlace
+    }
+  ];
 
   setContent(`
     <h2 class="text-xl font-bold mb-3">
@@ -321,31 +340,47 @@ function renderStandings(users, title, official) {
       </p>
     `}
 
-    ${hasWinners ? `
-      <div class="grid md:grid-cols-3 gap-3 mb-5">
-        ${winners.map(user => `
+    <div class="grid md:grid-cols-3 gap-3 mb-5">
+      ${prizeGroups.map(group => {
+        const totalPrize = group.users.reduce((sum, user) => sum + user.prize, 0);
+
+        return `
           <div class="border rounded-xl p-3 bg-slate-50">
             <p class="text-sm text-slate-500">
-              ${user.position === 1 ? "🥇 Primer lugar" : ""}
-              ${user.position === 2 ? "🥈 Segundo lugar" : ""}
-              ${user.position === 3 ? "🥉 Tercer lugar" : ""}
+              ${group.title}
             </p>
 
-            <p class="font-bold">
-              ${user.display_name}
+            <p class="text-xl font-bold text-emerald-700 mb-3">
+              ${formatMoney(totalPrize)}
             </p>
 
-            <p class="text-sm">
-              ${user.points} pts
-            </p>
+            ${group.users.length === 0 ? `
+              <p class="text-sm text-slate-500">
+                Sin ganador actual
+              </p>
+            ` : `
+              <div class="space-y-2">
+                ${group.users.map(user => `
+                  <div class="border rounded-lg p-2 bg-white">
+                    <p class="font-bold">
+                      ${user.display_name}
+                    </p>
 
-            <p class="font-bold text-emerald-700">
-              ${formatMoney(user.prize)}
-            </p>
+                    <p class="text-sm text-slate-500">
+                      ${user.points} pts
+                    </p>
+
+                    <p class="text-sm font-bold">
+                      Recibe: ${formatMoney(user.prize)}
+                    </p>
+                  </div>
+                `).join("")}
+              </div>
+            `}
           </div>
-        `).join("")}
-      </div>
-    ` : ""}
+        `;
+      }).join("")}
+    </div>
 
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
