@@ -128,6 +128,8 @@ function loadRules() {
     <h2 class="text-xl font-bold mb-4">📜 Reglas</h2>
 
     <div class="space-y-3 text-slate-700">
+      <h3 class="font-bold">Pronósticos de partidos</h3>
+
       <p><strong>Resultado acertado:</strong> 1 punto</p>
       <p><strong>Marcador exacto:</strong> 1 punto adicional</p>
 
@@ -145,15 +147,34 @@ function loadRules() {
         <p>Total: 1 punto</p>
       </div>
 
-      <p>Los pronósticos se bloquean antes del inicio del partido.</p>
+      <p>
+        Los pronósticos se bloquean 1 minuto antes del inicio de cada partido.
+      </p>
+
+      <h3 class="font-bold mt-4">Pronósticos Especiales</h3>
+
+      <ul class="list-disc list-inside">
+        <li>Campeón acertado: 5 puntos</li>
+        <li>Subcampeón acertado: 3 puntos</li>
+        <li>Tercer lugar acertado: 2 puntos</li>
+        <li>Máximo goleador acertado: 5 puntos</li>
+      </ul>
+
+      <p>
+        Los Pronósticos Especiales se bloquean al iniciar el primer partido del torneo.
+      </p>
 
       <h3 class="font-bold mt-4">Desempates</h3>
+
       <ol class="list-decimal list-inside">
         <li>Puntos</li>
         <li>Marcadores exactos</li>
         <li>Resultados acertados</li>
-        <li>Orden alfabético</li>
       </ol>
+
+      <p>
+        Si el empate persiste, el premio correspondiente se reparte entre los participantes empatados.
+      </p>
     </div>
   `);
 }
@@ -165,12 +186,30 @@ function loadFAQ() {
     <div class="space-y-4 text-slate-700">
       <div>
         <p class="font-bold">¿Cómo gano puntos?</p>
-        <p>Resultado correcto = 1 punto. Marcador exacto = 1 punto adicional.</p>
+        <p>
+          Resultado correcto = 1 punto. Marcador exacto = 1 punto adicional.
+        </p>
+      </div>
+
+      <div>
+        <p class="font-bold">¿Cuánto valen los Pronósticos Especiales?</p>
+        <p>
+          Campeón = 5 puntos, Subcampeón = 3 puntos, Tercer lugar = 2 puntos y Máximo goleador = 5 puntos.
+        </p>
       </div>
 
       <div>
         <p class="font-bold">¿Hasta cuándo puedo modificar mis pronósticos?</p>
-        <p>Hasta antes del bloqueo del partido.</p>
+        <p>
+          Cada partido puede modificarse hasta 1 minuto antes de su inicio.
+        </p>
+      </div>
+
+      <div>
+        <p class="font-bold">¿Hasta cuándo puedo cambiar mis especiales?</p>
+        <p>
+          Los Pronósticos Especiales pueden modificarse hasta el inicio del primer partido del torneo.
+        </p>
       </div>
 
       <div>
@@ -180,17 +219,23 @@ function loadFAQ() {
 
       <div>
         <p class="font-bold">¿Por qué un partido aparece bloqueado?</p>
-        <p>Porque ya inició o está dentro del tiempo de cierre.</p>
+        <p>
+          Porque falta 1 minuto o menos para que inicie, o porque el partido ya comenzó.
+        </p>
       </div>
 
       <div>
         <p class="font-bold">¿Cómo se calculan los premios?</p>
-        <p>Con base en los usuarios pagados y la configuración del torneo.</p>
+        <p>
+          Los montos mostrados son estimados y se actualizan automáticamente conforme aumenta el número de participantes confirmados.
+        </p>
       </div>
 
       <div>
-        <p class="font-bold">¿Puedo cambiar mis especiales?</p>
-        <p>Sí, mientras la sección esté abierta.</p>
+        <p class="font-bold">¿Qué pasa si hay empate?</p>
+        <p>
+          Se aplican los criterios de desempate. Si el empate persiste, el premio correspondiente se reparte entre los participantes empatados.
+        </p>
       </div>
     </div>
   `);
