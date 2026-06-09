@@ -5,16 +5,16 @@ async function renderDashboard() {
       ? "🟢 Pago Confirmado"
       : "🟡 Pago Pendiente";
 
-  let tournamentName = "";
+ let tournamentName = "";
 
   try {
     const { data } = await client
-      .from("settings")
-      .select("tournament_name")
-      .eq("id", 1)
+      .from("tournaments")
+      .select("name")
+      .eq("is_active", true)
       .single();
-
-    tournamentName = data?.tournament_name || "";
+  
+    tournamentName = data?.name || "";
   } catch (err) {
     console.error(err);
   }
