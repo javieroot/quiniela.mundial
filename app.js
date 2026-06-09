@@ -168,3 +168,4 @@ async function registerUser() {
     .getElementById("password")
     .value = "";
 }
+console.log("APP CARGADA");
