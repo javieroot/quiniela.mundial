@@ -54,7 +54,62 @@ async function resetUserPassword(userId, username) {
 
   if (userError) return alert(userError.message);
 
-  alert(
-    `Contraseña temporal para ${username}:\n\n${tempPassword}\n\nDebe cambiarla al iniciar sesión.`
-  );
+  setContent(`
+    <h2 class="text-xl font-bold mb-3">Contraseña temporal</h2>
+
+    <p class="mb-2">
+      Usuario: <strong>${username}</strong>
+    </p>
+
+    <input
+      id="tempPassword"
+      class="border rounded p-2 w-full mb-3 font-mono"
+      value="${tempPassword}"
+      readonly
+    >
+
+    <button
+      onclick="copyTempPassword()"
+      class="bg-blue-600 text-white rounded px-4 py-2 mr-2"
+    >
+      Copiar contraseña
+    </button>
+
+    <button
+      onclick="loadAdmin()"
+      class="bg-slate-700 text-white rounded px-4 py-2"
+    >
+      Volver
+    </button>
+
+    <p class="text-sm text-slate-500 mt-3">
+      El usuario deberá cambiarla al iniciar sesión.
+    </p>
+  `);
+}
+
+async function copyTempPassword() {
+  const input = document.getElementById("tempPassword");
+  const value = input.value;
+
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(value);
+      alert("Contraseña copiada");
+      return;
+    }
+
+    input.focus();
+    input.select();
+    input.setSelectionRange(0, 99999);
+
+    const ok = document.execCommand("copy");
+
+    alert(ok ? "Contraseña copiada" : "Selecciona y copia manualmente");
+  } catch (err) {
+    input.focus();
+    input.select();
+    input.setSelectionRange(0, 99999);
+    alert("No se pudo copiar automático. Ya quedó seleccionada para copiar manualmente.");
+  }
 }
