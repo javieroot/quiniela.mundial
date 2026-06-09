@@ -16,6 +16,13 @@ async function loadAdmin() {
 
   if (settingsError) return alert(settingsError.message);
 
+  const { data: matches, error: matchesError } = await client
+    .from("matches")
+    .select("*")
+    .order("match_date");
+
+  if (matchesError) return alert(matchesError.message);
+
   setContent(`
     <h2 class="text-xl font-bold mb-3">Administración</h2>
 
@@ -40,6 +47,58 @@ async function loadAdmin() {
         >
           Resetear contraseña
         </button>
+      </div>
+    `).join("")}
+
+    <hr class="my-6">
+
+    <h2 class="text-xl font-bold mb-3">
+      ⚽ Resultados
+    </h2>
+
+    ${(matches || []).map(match => `
+      <div class="border rounded-xl p-3 mb-2">
+
+        <p class="font-bold">
+          ${match.home_team} vs ${match.away_team}
+        </p>
+
+        <p class="text-sm text-slate-500 mb-2">
+          ${formatDateTime(match.match_date)}
+        </p>
+
+        <div class="flex gap-2 items-center">
+
+          <input
+            id="homeScore_${match.id}"
+            type="number"
+            min="0"
+            class="border rounded p-2 w-20"
+            value="${match.home_score ?? ""}"
+          >
+
+          <span>-</span>
+
+          <input
+            id="awayScore_${match.id}"
+            type="number"
+            min="0"
+            class="border rounded p-2 w-20"
+            value="${match.away_score ?? ""}"
+          >
+
+          <button
+            onclick="saveMatchResult(${match.id})"
+            class="bg-emerald-600 text-white rounded px-3 py-2"
+          >
+            Guardar
+          </button>
+
+        </div>
+
+        <p class="text-xs text-slate-500 mt-2">
+          Estado: ${match.status}
+        </p>
       </div>
     `).join("")}
 
@@ -130,6 +189,32 @@ async function loadAdmin() {
 
     </div>
   `);
+}
+
+async function saveMatchResult(matchId) {
+  const home =
+    document.getElementById(`homeScore_${matchId}`).value;
+
+  const away =
+    document.getElementById(`awayScore_${matchId}`).value;
+
+  if (home === "" || away === "") {
+    return alert("Captura ambos marcadores");
+  }
+
+  const { error } = await client
+    .from("matches")
+    .update({
+      home_score: Number(home),
+      away_score: Number(away),
+      status: "finished"
+    })
+    .eq("id", matchId);
+
+  if (error) return alert(error.message);
+
+  alert("Resultado guardado");
+  loadAdmin();
 }
 
 async function togglePayment(userId, status) {
