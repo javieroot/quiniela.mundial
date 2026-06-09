@@ -1,3 +1,4 @@
+let adminUsersExpanded = false;
 let adminResultsExpanded = false;
 
 async function loadAdmin() {
@@ -25,6 +26,10 @@ async function loadAdmin() {
 
   if (matchesError) return alert(matchesError.message);
 
+  const totalUsers = (users || []).length;
+  const paidUsers = (users || []).filter(u => u.payment_status === "PAID").length;
+  const pendingUsers = totalUsers - paidUsers;
+
   const pendingResults = (matches || []).filter(match =>
     match.home_score === null ||
     match.away_score === null
@@ -32,32 +37,6 @@ async function loadAdmin() {
 
   setContent(`
     <h2 class="text-xl font-bold mb-3">Administración</h2>
-
-    ${(users || []).map(u => `
-      <div class="border rounded-xl p-3 mb-2">
-        <p class="font-bold">${u.display_name}</p>
-
-        <p class="text-sm text-slate-600">
-          ${u.username} - ${u.payment_status}
-        </p>
-
-        <button
-          onclick="togglePayment('${u.id}', '${u.payment_status}')"
-          class="bg-blue-600 text-white rounded px-3 py-1 mt-2"
-        >
-          Cambiar pago
-        </button>
-
-        <button
-          onclick="resetUserPassword('${u.id}', '${u.username}')"
-          class="bg-slate-700 text-white rounded px-3 py-1 mt-2 ml-2"
-        >
-          Resetear contraseña
-        </button>
-      </div>
-    `).join("")}
-
-    <hr class="my-6">
 
     <h2 class="text-xl font-bold mb-3">
       ⚙️ Configuración
@@ -85,6 +64,55 @@ async function loadAdmin() {
       <button onclick="saveSettings()" class="bg-emerald-600 text-white rounded px-4 py-2">
         Guardar configuración
       </button>
+    </div>
+
+    <hr class="my-6">
+
+    <div class="border rounded-xl p-4 bg-slate-50">
+      <button
+        onclick="toggleAdminUsers()"
+        class="w-full flex justify-between items-center text-left"
+      >
+        <span class="text-xl font-bold">
+          👥 Participantes (${totalUsers})
+        </span>
+
+        <span class="text-xl">
+          ${adminUsersExpanded ? "▲" : "▼"}
+        </span>
+      </button>
+
+      <p class="text-sm text-slate-500 mt-2">
+        Pagados: ${paidUsers} · Pendientes: ${pendingUsers}
+      </p>
+
+      ${adminUsersExpanded ? `
+        <div class="mt-4">
+          ${(users || []).map(u => `
+            <div class="border rounded-xl p-3 mb-2 bg-white">
+              <p class="font-bold">${u.display_name}</p>
+
+              <p class="text-sm text-slate-600">
+                ${u.username} - ${u.payment_status}
+              </p>
+
+              <button
+                onclick="togglePayment('${u.id}', '${u.payment_status}')"
+                class="bg-blue-600 text-white rounded px-3 py-1 mt-2"
+              >
+                Cambiar pago
+              </button>
+
+              <button
+                onclick="resetUserPassword('${u.id}', '${u.username}')"
+                class="bg-slate-700 text-white rounded px-3 py-1 mt-2 ml-2"
+              >
+                Resetear contraseña
+              </button>
+            </div>
+          `).join("")}
+        </div>
+      ` : ""}
     </div>
 
     <hr class="my-6">
@@ -157,6 +185,11 @@ async function loadAdmin() {
       ` : ""}
     </div>
   `);
+}
+
+function toggleAdminUsers() {
+  adminUsersExpanded = !adminUsersExpanded;
+  loadAdmin();
 }
 
 function toggleAdminResults() {
