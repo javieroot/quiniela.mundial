@@ -1,4 +1,11 @@
-function renderAuth() {
+async function renderAuth() {
+
+  const { data: settings } = await client
+    .from("settings")
+    .select("tournament_name")
+    .eq("id", 1)
+    .single();
+
   render(`
     <div class="bg-white rounded-2xl shadow p-6 max-w-md mx-auto mt-10">
 
@@ -7,7 +14,7 @@ function renderAuth() {
       </h1>
 
       <p class="text-slate-500 mb-6">
-        ${PRONOSTIX_CONFIG.tournamentName}
+        ${settings?.tournament_name || ""}
       </p>
 
       <h2 class="font-bold mb-2">
@@ -102,7 +109,12 @@ async function registerUser() {
   if (displayName.length < 3 || displayName.length > 40) return alert("El nombre visible debe tener entre 3 y 40 caracteres");
   if (password.length < 6) return alert("La contraseña debe tener mínimo 6 caracteres");
 
-  const { data: existingUser } = await client.from("users").select("id").eq("username", username).maybeSingle();
+  const { data: existingUser } = await client
+    .from("users")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+
   if (existingUser) return alert("Ese usuario ya existe");
 
   const hash = await sha256(password);
@@ -117,7 +129,10 @@ async function registerUser() {
 
   const { error: credError } = await client
     .from("credentials")
-    .insert({ user_id: userData.id, password_hash: hash });
+    .insert({
+      user_id: userData.id,
+      password_hash: hash
+    });
 
   if (credError) return alert(credError.message);
 
@@ -129,11 +144,23 @@ async function loginUser() {
   const password = document.getElementById("loginPassword").value;
   const hash = await sha256(password);
 
-  const { data: user, error } = await client.from("users").select("*").eq("username", username).single();
+  const { data: user, error } = await client
+    .from("users")
+    .select("*")
+    .eq("username", username)
+    .single();
+
   if (error || !user) return alert("Usuario no encontrado");
 
-  const { data: credential } = await client.from("credentials").select("*").eq("user_id", user.id).single();
-  if (!credential || credential.password_hash !== hash) return alert("Contraseña incorrecta");
+  const { data: credential } = await client
+    .from("credentials")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!credential || credential.password_hash !== hash) {
+    return alert("Contraseña incorrecta");
+  }
 
   setCurrentUser(user);
 
@@ -141,7 +168,7 @@ async function loginUser() {
     renderForcePasswordChange();
     return;
   }
-  
+
   renderApp();
 }
 
@@ -250,9 +277,7 @@ async function changeTemporaryPassword() {
 }
 
 function togglePassword(inputId) {
-
-  const input =
-    document.getElementById(inputId);
+  const input = document.getElementById(inputId);
 
   if (!input) return;
 
