@@ -62,10 +62,85 @@ async function loginUser() {
   if (!credential || credential.password_hash !== hash) return alert("Contraseña incorrecta");
 
   setCurrentUser(user);
+  
+  if (user.must_change_password) {
+  renderForcePasswordChange();
+  return;
+  }
   renderApp();
 }
 
 function logout() {
   setCurrentUser(null);
+  renderApp();
+}
+
+function renderForcePasswordChange() {
+  render(`
+    <div class="bg-white rounded-2xl shadow p-6 max-w-md mx-auto mt-10">
+      <h1 class="text-2xl font-bold mb-4">Cambiar contraseña</h1>
+
+      <p class="text-slate-500 mb-4">
+        Estás usando una contraseña temporal. Debes crear una nueva para continuar.
+      </p>
+
+      <input
+        id="newPassword"
+        type="password"
+        class="border p-2 rounded w-full mb-2"
+        placeholder="Nueva contraseña"
+      >
+
+      <input
+        id="confirmPassword"
+        type="password"
+        class="border p-2 rounded w-full mb-3"
+        placeholder="Confirmar contraseña"
+      >
+
+      <button
+        onclick="changeTemporaryPassword()"
+        class="bg-blue-600 text-white rounded p-2 w-full"
+      >
+        Actualizar contraseña
+      </button>
+    </div>
+  `);
+}
+
+async function changeTemporaryPassword() {
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+
+  if (newPassword.length < 6) {
+    return alert("La contraseña debe tener mínimo 6 caracteres");
+  }
+
+  if (newPassword !== confirmPassword) {
+    return alert("Las contraseñas no coinciden");
+  }
+
+  const hash = await sha256(newPassword);
+
+  const { error: credError } = await client
+    .from("credentials")
+    .update({ password_hash: hash })
+    .eq("user_id", currentUser.id);
+
+  if (credError) return alert(credError.message);
+
+  const { data: updatedUser, error: userError } = await client
+    .from("users")
+    .update({ must_change_password: false })
+    .eq("id", currentUser.id)
+    .select()
+    .single();
+
+  if (userError) return alert(userError.message);
+
+  setCurrentUser(updatedUser);
+
+  alert("Contraseña actualizada correctamente");
+
   renderApp();
 }
