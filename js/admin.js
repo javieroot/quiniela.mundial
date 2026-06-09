@@ -1,5 +1,6 @@
 let adminUsersExpanded = false;
 let adminResultsExpanded = false;
+let adminSpecialResultsExpanded = false;
 
 async function loadAdmin() {
   if (!currentUser.is_admin) return alert("No autorizado");
@@ -34,6 +35,30 @@ async function loadAdmin() {
 
   if (matchesError) return alert(matchesError.message);
 
+  const { data: teams, error: teamsError } = await client
+    .from("teams")
+    .select("name")
+    .eq("tournament_id", activeTournament.id)
+    .order("name");
+
+  if (teamsError) return alert(teamsError.message);
+
+  const { data: players, error: playersError } = await client
+    .from("players")
+    .select("name")
+    .eq("tournament_id", activeTournament.id)
+    .order("name");
+
+  if (playersError) return alert(playersError.message);
+
+  const { data: specialResults, error: specialResultsError } = await client
+    .from("special_results")
+    .select("*")
+    .eq("tournament_id", activeTournament.id)
+    .maybeSingle();
+
+  if (specialResultsError) return alert(specialResultsError.message);
+
   const totalUsers = (users || []).length;
   const paidUsers = (users || []).filter(u => u.payment_status === "PAID").length;
   const pendingUsers = totalUsers - paidUsers;
@@ -42,6 +67,24 @@ async function loadAdmin() {
     match.home_score === null ||
     match.away_score === null
   ).length;
+
+  const teamOptions = (selectedValue) => `
+    <option value="">Selecciona equipo</option>
+    ${(teams || []).map(t => `
+      <option value="${t.name}" ${selectedValue === t.name ? "selected" : ""}>
+        ${t.name}
+      </option>
+    `).join("")}
+  `;
+
+  const playerOptions = (selectedValue) => `
+    <option value="">Selecciona goleador</option>
+    ${(players || []).map(p => `
+      <option value="${p.name}" ${selectedValue === p.name ? "selected" : ""}>
+        ${p.name}
+      </option>
+    `).join("")}
+  `;
 
   setContent(`
     <h2 class="text-xl font-bold mb-3">Administración</h2>
@@ -175,6 +218,58 @@ async function loadAdmin() {
 
     <div class="border rounded-xl p-4 bg-slate-50">
       <button
+        onclick="toggleAdminSpecialResults()"
+        class="w-full flex justify-between items-center text-left"
+      >
+        <span class="text-xl font-bold">
+          🏆 Resultados especiales
+        </span>
+
+        <span class="text-xl">
+          ${adminSpecialResultsExpanded ? "▲" : "▼"}
+        </span>
+      </button>
+
+      <p class="text-sm text-slate-500 mt-2">
+        Captura los resultados reales finales del torneo para sumar puntos especiales.
+      </p>
+
+      ${adminSpecialResultsExpanded ? `
+        <div class="mt-4">
+          <label class="block text-sm font-bold mb-1">Campeón real</label>
+          <select id="realChampion" class="border rounded p-2 w-full mb-2">
+            ${teamOptions(specialResults?.champion ?? "")}
+          </select>
+
+          <label class="block text-sm font-bold mb-1">Subcampeón real</label>
+          <select id="realRunnerUp" class="border rounded p-2 w-full mb-2">
+            ${teamOptions(specialResults?.runner_up ?? "")}
+          </select>
+
+          <label class="block text-sm font-bold mb-1">Tercer lugar real</label>
+          <select id="realThirdPlace" class="border rounded p-2 w-full mb-2">
+            ${teamOptions(specialResults?.third_place ?? "")}
+          </select>
+
+          <label class="block text-sm font-bold mb-1">Máximo goleador real</label>
+          <select id="realTopScorer" class="border rounded p-2 w-full mb-3">
+            ${playerOptions(specialResults?.top_scorer ?? "")}
+          </select>
+
+          <button
+            onclick="saveSpecialResults()"
+            class="bg-amber-600 text-white rounded-xl px-4 py-3 w-full font-bold"
+          >
+            Guardar resultados especiales
+          </button>
+        </div>
+      ` : ""}
+    </div>
+
+    <hr class="my-6">
+
+    <div class="border rounded-xl p-4 bg-slate-50">
+      <button
         onclick="toggleAdminResults()"
         class="w-full flex justify-between items-center text-left"
       >
@@ -253,6 +348,11 @@ function toggleAdminResults() {
   loadAdmin();
 }
 
+function toggleAdminSpecialResults() {
+  adminSpecialResultsExpanded = !adminSpecialResultsExpanded;
+  loadAdmin();
+}
+
 async function saveMatchResults() {
   const { data: matches, error } = await client
     .from("matches")
@@ -308,6 +408,49 @@ async function saveMatchResults() {
 
   alert(`${saved} resultado(s) guardado(s)`);
   await loadAdmin();
+}
+
+async function saveSpecialResults() {
+  const champion = document.getElementById("realChampion").value;
+  const runnerUp = document.getElementById("realRunnerUp").value;
+  const thirdPlace = document.getElementById("realThirdPlace").value;
+  const topScorer = document.getElementById("realTopScorer").value;
+
+  if (!champion || !runnerUp || !thirdPlace || !topScorer) {
+    return alert("Completa todos los resultados especiales");
+  }
+
+  if (
+    champion === runnerUp ||
+    champion === thirdPlace ||
+    runnerUp === thirdPlace
+  ) {
+    return alert("Campeón, subcampeón y tercer lugar deben ser equipos diferentes");
+  }
+
+  const { data: activeTournament, error: tournamentError } = await client
+    .from("tournaments")
+    .select("id")
+    .eq("is_active", true)
+    .single();
+
+  if (tournamentError) return alert(tournamentError.message);
+
+  const { error } = await client
+    .from("special_results")
+    .upsert({
+      tournament_id: activeTournament.id,
+      champion,
+      runner_up: runnerUp,
+      third_place: thirdPlace,
+      top_scorer: topScorer,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "tournament_id" });
+
+  if (error) return alert(error.message);
+
+  alert("Resultados especiales guardados");
+  loadAdmin();
 }
 
 async function togglePayment(userId, status) {
