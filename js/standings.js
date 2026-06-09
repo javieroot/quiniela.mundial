@@ -70,6 +70,17 @@ async function calculateLiveStandings(onlyPaid) {
     return [];
   }
 
+  const { data: activeTournament, error: tournamentError } = await client
+    .from("tournaments")
+    .select("id")
+    .eq("is_active", true)
+    .single();
+  
+  if (tournamentError) {
+    alert(tournamentError.message);
+    return [];
+  }
+  
   const { data: specialResults, error: specialResultsError } = await client
     .from("special_results")
     .select(`
@@ -78,9 +89,9 @@ async function calculateLiveStandings(onlyPaid) {
       third_place,
       top_scorer
     `)
-    .eq("tournament_id", 1)
+    .eq("tournament_id", activeTournament.id)
     .maybeSingle();
-
+  
   if (specialResultsError) {
     alert(specialResultsError.message);
     return [];
