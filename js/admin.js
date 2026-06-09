@@ -18,6 +18,14 @@ async function loadAdmin() {
     .single();
 
   if (settingsError) return alert(settingsError.message);
+  
+  const { data: activeTournament, error: tournamentError } = await client
+    .from("tournaments")
+    .select("id, name")
+    .eq("is_active", true)
+    .single();
+
+  if (tournamentError) return alert(tournamentError.message);
 
   const { data: matches, error: matchesError } = await client
     .from("matches")
@@ -46,7 +54,7 @@ async function loadAdmin() {
       <input
         id="cfgTournament"
         class="border rounded p-2 w-full mb-4"
-        value="${settings.tournament_name}"
+        value="${activeTournament.name}"
       >
     
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -397,10 +405,23 @@ async function saveSettings() {
     return alert("La suma de porcentajes no puede exceder 100%");
   }
 
+  const tournamentName =
+    document.getElementById("cfgTournament").value;
+  
+  const { error: tournamentError } = await client
+    .from("tournaments")
+    .update({
+      name: tournamentName
+    })
+    .eq("is_active", true);
+  
+  if (tournamentError) {
+    return alert(tournamentError.message);
+  }
+  
   const { error } = await client
     .from("settings")
     .update({
-      tournament_name: document.getElementById("cfgTournament").value,
       entry_fee: Number(document.getElementById("cfgEntryFee").value),
       admin_percentage: admin,
       first_place_percentage: first,
