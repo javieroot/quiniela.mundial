@@ -24,51 +24,88 @@ document
 
 async function registerUser() {
 
-    const username =
-    document
-    .getElementById("username")
-    .value
-    .trim();
+    try {
 
-    const displayName =
-    document
-    .getElementById("displayName")
-    .value
-    .trim();
+        const username =
+        document.getElementById("username").value.trim();
 
-    const password =
-    document
-    .getElementById("password")
-    .value;
+        const displayName =
+        document.getElementById("displayName").value.trim();
 
-    const output =
-    document
-    .getElementById("output");
+        const password =
+        document.getElementById("password").value;
 
-    output.textContent = "Registrando...";
+        console.log("username", username);
+        console.log("displayName", displayName);
 
-    if (!username || !displayName || !password) {
+        const { data: existingUser, error: existingError } =
+        await client
+        .from("users")
+        .select("id")
+        .eq("username", username)
+        .maybeSingle();
 
-        output.textContent =
-        "Todos los campos son obligatorios";
+        console.log("existingUser", existingUser);
+        console.log("existingError", existingError);
 
-    return;
+        if (existingUser) {
+            alert("Usuario ya existe");
+            return;
+        }
+
+        const hash = await sha256(password);
+
+        console.log("hash", hash);
+
+        const {
+            data: userData,
+            error: userError
+        } = await client
+        .from("users")
+        .insert({
+            username,
+            display_name: displayName
+        })
+        .select();
+
+        console.log("userData", userData);
+        console.log("userError", userError);
+
+        if (userError) {
+            alert(JSON.stringify(userError));
+            return;
+        }
+
+        const userId = userData[0].id;
+
+        const {
+            data: credentialData,
+            error: credentialError
+        } = await client
+        .from("credentials")
+        .insert({
+            user_id: userId,
+            password_hash: hash
+        })
+        .select();
+
+        console.log("credentialData", credentialData);
+        console.log("credentialError", credentialError);
+
+        if (credentialError) {
+            alert(JSON.stringify(credentialError));
+            return;
+        }
+
+        alert("Usuario creado");
+
+    } catch (err) {
+
+        console.error(err);
+        alert(err.message);
+
     }
-
-    const { data: existingUser } = await client
-    .from("users")
-    .select("id")
-    .eq("username", username)
-    .maybeSingle();
-
-    if (existingUser) {
-
-        output.textContent =
-        "El usuario ya existe";
-
-    return;
-    }
-
+}
     const hash = await sha256(password);
 
     const {
