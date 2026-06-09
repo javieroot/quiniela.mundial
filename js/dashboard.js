@@ -78,6 +78,21 @@ async function renderDashboard() {
       </button>
 
       <button
+        onclick="loadRules()"
+        class="bg-slate-700 text-white rounded-xl p-3"
+      >
+        📜 Reglas
+      </button>
+      
+      <button
+        onclick="loadFAQ()"
+        class="bg-slate-500 text-white rounded-xl p-3"
+      >
+        ❓ FAQ
+      </button>
+
+
+      <button
         onclick="loadSpecials()"
         class="bg-amber-500 text-white rounded-xl p-3"
       >
@@ -103,6 +118,80 @@ async function renderDashboard() {
       class="bg-white rounded-2xl shadow p-4"
     >
       <p>Selecciona una opción.</p>
+    </div>
+  `);
+}
+
+
+function loadRules() {
+  setContent(`
+    <h2 class="text-xl font-bold mb-4">📜 Reglas</h2>
+
+    <div class="space-y-3 text-slate-700">
+      <p><strong>Resultado acertado:</strong> 1 punto</p>
+      <p><strong>Marcador exacto:</strong> 1 punto adicional</p>
+
+      <div class="bg-slate-100 rounded-xl p-3">
+        <p><strong>Ejemplo marcador exacto:</strong></p>
+        <p>Pronóstico: 2-1</p>
+        <p>Resultado: 2-1</p>
+        <p>Total: 2 puntos</p>
+      </div>
+
+      <div class="bg-slate-100 rounded-xl p-3">
+        <p><strong>Ejemplo resultado acertado:</strong></p>
+        <p>Pronóstico: 3-2</p>
+        <p>Resultado: 2-1</p>
+        <p>Total: 1 punto</p>
+      </div>
+
+      <p>Los pronósticos se bloquean antes del inicio del partido.</p>
+
+      <h3 class="font-bold mt-4">Desempates</h3>
+      <ol class="list-decimal list-inside">
+        <li>Puntos</li>
+        <li>Marcadores exactos</li>
+        <li>Resultados acertados</li>
+        <li>Orden alfabético</li>
+      </ol>
+    </div>
+  `);
+}
+
+function loadFAQ() {
+  setContent(`
+    <h2 class="text-xl font-bold mb-4">❓ FAQ</h2>
+
+    <div class="space-y-4 text-slate-700">
+      <div>
+        <p class="font-bold">¿Cómo gano puntos?</p>
+        <p>Resultado correcto = 1 punto. Marcador exacto = 1 punto adicional.</p>
+      </div>
+
+      <div>
+        <p class="font-bold">¿Hasta cuándo puedo modificar mis pronósticos?</p>
+        <p>Hasta antes del bloqueo del partido.</p>
+      </div>
+
+      <div>
+        <p class="font-bold">¿Debo guardar cada partido?</p>
+        <p>No. Usa el botón “Guardar Todo”.</p>
+      </div>
+
+      <div>
+        <p class="font-bold">¿Por qué un partido aparece bloqueado?</p>
+        <p>Porque ya inició o está dentro del tiempo de cierre.</p>
+      </div>
+
+      <div>
+        <p class="font-bold">¿Cómo se calculan los premios?</p>
+        <p>Con base en los usuarios pagados y la configuración del torneo.</p>
+      </div>
+
+      <div>
+        <p class="font-bold">¿Puedo cambiar mis especiales?</p>
+        <p>Sí, mientras la sección esté abierta.</p>
+      </div>
     </div>
   `);
 }
