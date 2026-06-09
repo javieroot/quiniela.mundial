@@ -63,12 +63,9 @@ async function loadPrizes() {
         💰 Bolsa de Premios
       </h2>
 
-      <div class="space-y-2 mb-6">
-        <p><strong>Participantes pagados:</strong> ${paidParticipants}</p>
-        <p><strong>Costo inscripción:</strong> $${entryFee.toFixed(2)}</p>
-        <p><strong>Pozo total:</strong> $${totalPool.toFixed(2)}</p>
-        <p><strong>Bolsa de premios:</strong> $${prizePool.toFixed(2)}</p>
-      </div>
+      <p class="text-slate-500 mb-6">
+        Montos sujetos a actualización.
+      </p>
 
       <div class="grid md:grid-cols-3 gap-4">
 
