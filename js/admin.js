@@ -1,29 +1,18 @@
 async function loadAdmin() {
   if (!currentUser.is_admin) return alert("No autorizado");
 
-const { data, error } = await client
-  .from("settings")
-  .update({
-    tournament_name:
-      document.getElementById("cfgTournament").value,
+  const { data: users, error } = await client
+    .from("users")
+    .select("*")
+    .order("created_at");
 
-    entry_fee:
-      Number(document.getElementById("cfgEntryFee").value),
+  if (error) return alert(error.message);
 
-    admin_percentage: admin,
-
-    first_place_percentage: first,
-
-    second_place_percentage: second,
-
-    third_place_percentage: third
-  })
-  .eq("id", 1)
-  .select();
-
-console.log("SETTINGS UPDATE");
-console.log("DATA:", data);
-console.log("ERROR:", error);
+  const { data: settings, error: settingsError } = await client
+    .from("settings")
+    .select("*")
+    .eq("id", 1)
+    .single();
 
   if (settingsError) return alert(settingsError.message);
 
@@ -33,6 +22,7 @@ console.log("ERROR:", error);
     ${(users || []).map(u => `
       <div class="border rounded-xl p-3 mb-2">
         <p class="font-bold">${u.display_name}</p>
+
         <p class="text-sm text-slate-600">
           ${u.username} - ${u.payment_status}
         </p>
@@ -221,34 +211,26 @@ async function resetUserPassword(userId, username) {
 
 async function copyTempPassword() {
   const input = document.getElementById("tempPassword");
-  const value = input.value;
 
   try {
     if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(value);
+      await navigator.clipboard.writeText(input.value);
       alert("Contraseña copiada");
       return;
     }
 
-    input.focus();
     input.select();
-    input.setSelectionRange(0, 99999);
+    document.execCommand("copy");
+    alert("Contraseña copiada");
 
-    const ok = document.execCommand("copy");
-
-    alert(ok ? "Contraseña copiada" : "Selecciona y copia manualmente");
   } catch (err) {
-    input.focus();
     input.select();
-    input.setSelectionRange(0, 99999);
-
-    alert(
-      "No se pudo copiar automático. Ya quedó seleccionada para copiar manualmente."
-    );
+    alert("No se pudo copiar automáticamente");
   }
 }
 
 async function saveSettings() {
+
   const admin =
     Number(document.getElementById("cfgAdmin").value);
 
@@ -270,7 +252,7 @@ async function saveSettings() {
     );
   }
 
-  const { error } = await client
+  const { data, error } = await client
     .from("settings")
     .update({
       tournament_name:
@@ -287,7 +269,12 @@ async function saveSettings() {
 
       third_place_percentage: third
     })
-    .eq("id", 1);
+    .eq("id", 1)
+    .select();
+
+  console.log("SETTINGS UPDATE");
+  console.log("DATA:", data);
+  console.log("ERROR:", error);
 
   if (error) {
     alert(error.message);
@@ -295,5 +282,6 @@ async function saveSettings() {
   }
 
   alert("Configuración guardada");
+
   loadAdmin();
 }
