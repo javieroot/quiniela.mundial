@@ -1,3 +1,5 @@
+let adminResultsExpanded = false;
+
 async function loadAdmin() {
   if (!currentUser.is_admin) return alert("No autorizado");
 
@@ -22,6 +24,11 @@ async function loadAdmin() {
     .order("match_date");
 
   if (matchesError) return alert(matchesError.message);
+
+  const pendingResults = (matches || []).filter(match =>
+    match.home_score === null ||
+    match.away_score === null
+  ).length;
 
   setContent(`
     <h2 class="text-xl font-bold mb-3">Administración</h2>
@@ -53,167 +60,144 @@ async function loadAdmin() {
     <hr class="my-6">
 
     <h2 class="text-xl font-bold mb-3">
-      ⚽ Resultados
-    </h2>
-
-    ${(matches || []).map(match => `
-      <div class="border rounded-xl p-3 mb-2">
-
-        <p class="font-bold">
-          ${match.home_team} vs ${match.away_team}
-        </p>
-
-        <p class="text-sm text-slate-500 mb-2">
-          ${formatDateTime(match.match_date)}
-        </p>
-
-        <div class="flex gap-2 items-center">
-
-          <input
-            id="homeScore_${match.id}"
-            type="number"
-            min="0"
-            class="border rounded p-2 w-20"
-            value="${match.home_score ?? ""}"
-          >
-
-          <span>-</span>
-
-          <input
-            id="awayScore_${match.id}"
-            type="number"
-            min="0"
-            class="border rounded p-2 w-20"
-            value="${match.away_score ?? ""}"
-          >
-
-          <button
-            onclick="saveMatchResult(${match.id})"
-            class="bg-emerald-600 text-white rounded px-3 py-2"
-          >
-            Guardar
-          </button>
-
-        </div>
-
-        <p class="text-xs text-slate-500 mt-2">
-          Estado: ${match.status}
-        </p>
-      </div>
-    `).join("")}
-
-    <hr class="my-6">
-
-    <h2 class="text-xl font-bold mb-3">
       ⚙️ Configuración
     </h2>
 
     <div class="border rounded-xl p-4">
+      <label class="block mb-2">Nombre del torneo</label>
+      <input id="cfgTournament" class="border rounded p-2 w-full mb-3" value="${settings.tournament_name}">
 
-      <label class="block mb-2">
-        Nombre del torneo
-      </label>
+      <label class="block mb-2">Costo de inscripción</label>
+      <input id="cfgEntryFee" type="number" step="0.01" class="border rounded p-2 w-full mb-3" value="${settings.entry_fee}">
 
-      <input
-        id="cfgTournament"
-        class="border rounded p-2 w-full mb-3"
-        value="${settings.tournament_name}"
-      >
+      <label class="block mb-2">% Administrador</label>
+      <input id="cfgAdmin" type="number" step="0.01" class="border rounded p-2 w-full mb-3" value="${settings.admin_percentage}">
 
-      <label class="block mb-2">
-        Costo de inscripción
-      </label>
+      <label class="block mb-2">% Primer Lugar</label>
+      <input id="cfgFirst" type="number" step="0.01" class="border rounded p-2 w-full mb-3" value="${settings.first_place_percentage}">
 
-      <input
-        id="cfgEntryFee"
-        type="number"
-        step="0.01"
-        class="border rounded p-2 w-full mb-3"
-        value="${settings.entry_fee}"
-      >
+      <label class="block mb-2">% Segundo Lugar</label>
+      <input id="cfgSecond" type="number" step="0.01" class="border rounded p-2 w-full mb-3" value="${settings.second_place_percentage}">
 
-      <label class="block mb-2">
-        % Administrador
-      </label>
+      <label class="block mb-2">% Tercer Lugar</label>
+      <input id="cfgThird" type="number" step="0.01" class="border rounded p-2 w-full mb-3" value="${settings.third_place_percentage}">
 
-      <input
-        id="cfgAdmin"
-        type="number"
-        step="0.01"
-        class="border rounded p-2 w-full mb-3"
-        value="${settings.admin_percentage}"
-      >
-
-      <label class="block mb-2">
-        % Primer Lugar
-      </label>
-
-      <input
-        id="cfgFirst"
-        type="number"
-        step="0.01"
-        class="border rounded p-2 w-full mb-3"
-        value="${settings.first_place_percentage}"
-      >
-
-      <label class="block mb-2">
-        % Segundo Lugar
-      </label>
-
-      <input
-        id="cfgSecond"
-        type="number"
-        step="0.01"
-        class="border rounded p-2 w-full mb-3"
-        value="${settings.second_place_percentage}"
-      >
-
-      <label class="block mb-2">
-        % Tercer Lugar
-      </label>
-
-      <input
-        id="cfgThird"
-        type="number"
-        step="0.01"
-        class="border rounded p-2 w-full mb-3"
-        value="${settings.third_place_percentage}"
-      >
-
-      <button
-        onclick="saveSettings()"
-        class="bg-emerald-600 text-white rounded px-4 py-2"
-      >
+      <button onclick="saveSettings()" class="bg-emerald-600 text-white rounded px-4 py-2">
         Guardar configuración
       </button>
+    </div>
 
+    <hr class="my-6">
+
+    <div class="border rounded-xl p-4 bg-slate-50">
+      <button
+        onclick="toggleAdminResults()"
+        class="w-full flex justify-between items-center text-left"
+      >
+        <span class="text-xl font-bold">
+          📊 Captura de resultados (${pendingResults} pendientes)
+        </span>
+
+        <span class="text-xl">
+          ${adminResultsExpanded ? "▲" : "▼"}
+        </span>
+      </button>
+
+      ${adminResultsExpanded ? `
+        <div class="mt-4 space-y-3">
+          ${(matches || []).length ? (matches || []).map(match => `
+            <div class="border rounded-xl p-3 bg-white">
+              <p class="font-bold">
+                ${match.home_team} vs ${match.away_team}
+              </p>
+
+              <p class="text-sm text-slate-500 mb-3">
+                ${formatDateTime(match.match_date)}
+              </p>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-sm mb-1">${match.home_team}</label>
+                  <input
+                    id="result_home_${match.id}"
+                    type="number"
+                    min="0"
+                    class="border rounded p-2 w-full text-center"
+                    value="${match.home_score ?? ""}"
+                    placeholder="0"
+                  >
+                </div>
+
+                <div>
+                  <label class="block text-sm mb-1">${match.away_team}</label>
+                  <input
+                    id="result_away_${match.id}"
+                    type="number"
+                    min="0"
+                    class="border rounded p-2 w-full text-center"
+                    value="${match.away_score ?? ""}"
+                    placeholder="0"
+                  >
+                </div>
+              </div>
+            </div>
+          `).join("") : `
+            <p class="text-slate-500">No hay partidos cargados.</p>
+          `}
+
+          ${(matches || []).length ? `
+            <button
+              onclick="saveMatchResults()"
+              class="bg-blue-600 text-white rounded-xl px-4 py-3 w-full font-bold"
+            >
+              💾 Guardar resultados
+            </button>
+          ` : ""}
+        </div>
+      ` : ""}
     </div>
   `);
 }
 
-async function saveMatchResult(matchId) {
-  const home =
-    document.getElementById(`homeScore_${matchId}`).value;
+function toggleAdminResults() {
+  adminResultsExpanded = !adminResultsExpanded;
+  loadAdmin();
+}
 
-  const away =
-    document.getElementById(`awayScore_${matchId}`).value;
-
-  if (home === "" || away === "") {
-    return alert("Captura ambos marcadores");
-  }
-
-  const { error } = await client
+async function saveMatchResults() {
+  const { data: matches, error } = await client
     .from("matches")
-    .update({
-      home_score: Number(home),
-      away_score: Number(away),
-      status: "finished"
-    })
-    .eq("id", matchId);
+    .select("id");
 
   if (error) return alert(error.message);
 
-  alert("Resultado guardado");
+  let saved = 0;
+
+  for (const match of matches || []) {
+    const homeInput = document.getElementById(`result_home_${match.id}`);
+    const awayInput = document.getElementById(`result_away_${match.id}`);
+
+    if (!homeInput || !awayInput) continue;
+
+    const home = homeInput.value;
+    const away = awayInput.value;
+
+    if (home === "" || away === "") continue;
+
+    const { error: updateError } = await client
+      .from("matches")
+      .update({
+        home_score: Number(home),
+        away_score: Number(away)
+      })
+      .eq("id", match.id);
+
+    if (updateError) return alert(updateError.message);
+
+    saved++;
+  }
+
+  alert(`${saved} resultado(s) guardado(s)`);
   loadAdmin();
 }
 
@@ -259,32 +243,19 @@ async function resetUserPassword(userId, username) {
   if (userError) return alert(userError.message);
 
   setContent(`
-    <h2 class="text-xl font-bold mb-3">
-      Contraseña temporal
-    </h2>
+    <h2 class="text-xl font-bold mb-3">Contraseña temporal</h2>
 
     <p class="mb-2">
       Usuario: <strong>${username}</strong>
     </p>
 
-    <input
-      id="tempPassword"
-      class="border rounded p-2 w-full mb-3 font-mono"
-      value="${tempPassword}"
-      readonly
-    >
+    <input id="tempPassword" class="border rounded p-2 w-full mb-3 font-mono" value="${tempPassword}" readonly>
 
-    <button
-      onclick="copyTempPassword()"
-      class="bg-blue-600 text-white rounded px-4 py-2 mr-2"
-    >
+    <button onclick="copyTempPassword()" class="bg-blue-600 text-white rounded px-4 py-2 mr-2">
       Copiar contraseña
     </button>
 
-    <button
-      onclick="loadAdmin()"
-      class="bg-slate-700 text-white rounded px-4 py-2"
-    >
+    <button onclick="loadAdmin()" class="bg-slate-700 text-white rounded px-4 py-2">
       Volver
     </button>
 
@@ -307,7 +278,6 @@ async function copyTempPassword() {
     input.select();
     document.execCommand("copy");
     alert("Contraseña copiada");
-
   } catch (err) {
     input.select();
     alert("No se pudo copiar automáticamente");
@@ -315,54 +285,31 @@ async function copyTempPassword() {
 }
 
 async function saveSettings() {
+  const admin = Number(document.getElementById("cfgAdmin").value);
+  const first = Number(document.getElementById("cfgFirst").value);
+  const second = Number(document.getElementById("cfgSecond").value);
+  const third = Number(document.getElementById("cfgThird").value);
 
-  const admin =
-    Number(document.getElementById("cfgAdmin").value);
-
-  const first =
-    Number(document.getElementById("cfgFirst").value);
-
-  const second =
-    Number(document.getElementById("cfgSecond").value);
-
-  const third =
-    Number(document.getElementById("cfgThird").value);
-
-  const total =
-    admin + first + second + third;
+  const total = admin + first + second + third;
 
   if (total > 100) {
-    return alert(
-      "La suma de porcentajes no puede exceder 100%"
-    );
+    return alert("La suma de porcentajes no puede exceder 100%");
   }
 
-  const { data, error } = await client
+  const { error } = await client
     .from("settings")
     .update({
-      tournament_name:
-        document.getElementById("cfgTournament").value,
-
-      entry_fee:
-        Number(document.getElementById("cfgEntryFee").value),
-
+      tournament_name: document.getElementById("cfgTournament").value,
+      entry_fee: Number(document.getElementById("cfgEntryFee").value),
       admin_percentage: admin,
-
       first_place_percentage: first,
-
       second_place_percentage: second,
-
       third_place_percentage: third
     })
-    .eq("id", 1)
-    .select();
+    .eq("id", 1);
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
+  if (error) return alert(error.message);
 
   alert("Configuración guardada");
-
   loadAdmin();
 }
