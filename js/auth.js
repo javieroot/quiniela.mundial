@@ -1,19 +1,93 @@
 function renderAuth() {
   render(`
     <div class="bg-white rounded-2xl shadow p-6 max-w-md mx-auto mt-10">
-      <h1 class="text-3xl font-bold mb-1">🏆 ${PRONOSTIX_CONFIG.platformName}</h1>
-      <p class="text-slate-500 mb-6">${PRONOSTIX_CONFIG.tournamentName}</p>
 
-      <h2 class="font-bold mb-2">Entrar</h2>
-      <input id="loginUsername" class="border p-2 rounded w-full mb-2" placeholder="Usuario">
-      <input id="loginPassword" class="border p-2 rounded w-full mb-3" type="password" placeholder="Contraseña">
-      <button onclick="loginUser()" class="bg-blue-600 text-white rounded p-2 w-full mb-6">Entrar</button>
+      <h1 class="text-3xl font-bold mb-1">
+        🏆 ${PRONOSTIX_CONFIG.platformName}
+      </h1>
 
-      <h2 class="font-bold mb-2">Registro</h2>
-      <input id="username" class="border p-2 rounded w-full mb-2" placeholder="Usuario">
-      <input id="displayName" class="border p-2 rounded w-full mb-2" placeholder="Nombre visible">
-      <input id="password" class="border p-2 rounded w-full mb-3" type="password" placeholder="Contraseña">
-      <button onclick="registerUser()" class="bg-emerald-600 text-white rounded p-2 w-full">Registrar</button>
+      <p class="text-slate-500 mb-6">
+        ${PRONOSTIX_CONFIG.tournamentName}
+      </p>
+
+      <h2 class="font-bold mb-2">
+        Entrar
+      </h2>
+
+      <input
+        id="loginUsername"
+        class="border p-2 rounded w-full mb-2"
+        placeholder="Usuario"
+      >
+
+      <div class="flex gap-2 mb-3">
+
+        <input
+          id="loginPassword"
+          class="border p-2 rounded flex-1"
+          type="password"
+          placeholder="Contraseña"
+        >
+
+        <button
+          type="button"
+          onclick="togglePassword('loginPassword')"
+          class="bg-slate-700 text-white px-3 rounded"
+        >
+          👁️
+        </button>
+
+      </div>
+
+      <button
+        onclick="loginUser()"
+        class="bg-blue-600 text-white rounded p-2 w-full mb-6"
+      >
+        Entrar
+      </button>
+
+      <h2 class="font-bold mb-2">
+        Registro
+      </h2>
+
+      <input
+        id="username"
+        class="border p-2 rounded w-full mb-2"
+        placeholder="Usuario"
+      >
+
+      <input
+        id="displayName"
+        class="border p-2 rounded w-full mb-2"
+        placeholder="Nombre visible"
+      >
+
+      <div class="flex gap-2 mb-3">
+
+        <input
+          id="password"
+          class="border p-2 rounded flex-1"
+          type="password"
+          placeholder="Contraseña"
+        >
+
+        <button
+          type="button"
+          onclick="togglePassword('password')"
+          class="bg-slate-700 text-white px-3 rounded"
+        >
+          👁️
+        </button>
+
+      </div>
+
+      <button
+        onclick="registerUser()"
+        class="bg-emerald-600 text-white rounded p-2 w-full"
+      >
+        Registrar
+      </button>
+
     </div>
   `);
 }
@@ -79,25 +153,53 @@ function logout() {
 function renderForcePasswordChange() {
   render(`
     <div class="bg-white rounded-2xl shadow p-6 max-w-md mx-auto mt-10">
-      <h1 class="text-2xl font-bold mb-4">Cambiar contraseña</h1>
+
+      <h1 class="text-2xl font-bold mb-4">
+        Cambiar contraseña
+      </h1>
 
       <p class="text-slate-500 mb-4">
-        Estás usando una contraseña temporal. Debes crear una nueva para continuar.
+        Estás usando una contraseña temporal.
+        Debes crear una nueva para continuar.
       </p>
 
-      <input
-        id="newPassword"
-        type="password"
-        class="border p-2 rounded w-full mb-2"
-        placeholder="Nueva contraseña"
-      >
+      <div class="flex gap-2 mb-2">
 
-      <input
-        id="confirmPassword"
-        type="password"
-        class="border p-2 rounded w-full mb-3"
-        placeholder="Confirmar contraseña"
-      >
+        <input
+          id="newPassword"
+          type="password"
+          class="border p-2 rounded flex-1"
+          placeholder="Nueva contraseña"
+        >
+
+        <button
+          type="button"
+          onclick="togglePassword('newPassword')"
+          class="bg-slate-700 text-white px-3 rounded"
+        >
+          👁️
+        </button>
+
+      </div>
+
+      <div class="flex gap-2 mb-3">
+
+        <input
+          id="confirmPassword"
+          type="password"
+          class="border p-2 rounded flex-1"
+          placeholder="Confirmar contraseña"
+        >
+
+        <button
+          type="button"
+          onclick="togglePassword('confirmPassword')"
+          class="bg-slate-700 text-white px-3 rounded"
+        >
+          👁️
+        </button>
+
+      </div>
 
       <button
         onclick="changeTemporaryPassword()"
@@ -105,6 +207,7 @@ function renderForcePasswordChange() {
       >
         Actualizar contraseña
       </button>
+
     </div>
   `);
 }
@@ -144,4 +247,17 @@ async function changeTemporaryPassword() {
   alert("Contraseña actualizada correctamente");
 
   renderApp();
+}
+
+function togglePassword(inputId) {
+
+  const input =
+    document.getElementById(inputId);
+
+  if (!input) return;
+
+  input.type =
+    input.type === "password"
+      ? "text"
+      : "password";
 }
