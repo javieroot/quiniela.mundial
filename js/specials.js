@@ -43,19 +43,7 @@ async function loadSpecials() {
   const specialsLocked =
     new Date() >= new Date(firstMatch.match_date);
 
-  if (specialsLocked) {
-    setContent(`
-      <h2 class="text-xl font-bold mb-3">
-        Pronósticos Especiales
-      </h2>
-
-      <div class="bg-red-100 text-red-700 rounded-xl p-4">
-        Los Pronósticos Especiales han sido cerrados.
-      </div>
-    `);
-
-    return;
-  }
+  const disabled = specialsLocked ? "disabled" : "";
 
   const teamOptions = (selectedValue) => `
     <option value="">Selecciona equipo</option>
@@ -82,32 +70,44 @@ async function loadSpecials() {
       Torneo: ${activeTournament.name}
     </p>
 
+    ${specialsLocked ? `
+      <div class="bg-red-100 text-red-700 rounded-xl p-3 mb-4">
+        Los Pronósticos Especiales han sido cerrados. Ya no pueden modificarse.
+      </div>
+    ` : `
+      <div class="bg-amber-100 text-amber-800 rounded-xl p-3 mb-4">
+        Los Pronósticos Especiales se bloquean al iniciar el primer partido del torneo.
+      </div>
+    `}
+
     <label class="block text-sm font-bold mb-1">Campeón</label>
-    <select id="champion" class="border rounded p-2 w-full mb-2">
+    <select id="champion" class="border rounded p-2 w-full mb-2" ${disabled}>
       ${teamOptions(special?.champion ?? "")}
     </select>
 
     <label class="block text-sm font-bold mb-1">Subcampeón</label>
-    <select id="runnerUp" class="border rounded p-2 w-full mb-2">
+    <select id="runnerUp" class="border rounded p-2 w-full mb-2" ${disabled}>
       ${teamOptions(special?.runner_up ?? "")}
     </select>
 
     <label class="block text-sm font-bold mb-1">Tercer lugar</label>
-    <select id="thirdPlace" class="border rounded p-2 w-full mb-2">
+    <select id="thirdPlace" class="border rounded p-2 w-full mb-2" ${disabled}>
       ${teamOptions(special?.third_place ?? "")}
     </select>
 
     <label class="block text-sm font-bold mb-1">Máximo goleador</label>
-    <select id="topScorer" class="border rounded p-2 w-full mb-3">
+    <select id="topScorer" class="border rounded p-2 w-full mb-3" ${disabled}>
       ${playerOptions(special?.top_scorer ?? "")}
     </select>
 
-    <button
-      onclick="saveSpecials()"
-      class="bg-amber-500 text-white rounded p-2 w-full"
-    >
-      Guardar especiales
-    </button>
+    ${specialsLocked ? "" : `
+      <button
+        onclick="saveSpecials()"
+        class="bg-amber-500 text-white rounded p-2 w-full"
+      >
+        Guardar especiales
+      </button>
+    `}
   `);
 }
 
@@ -129,6 +129,19 @@ async function saveSpecials() {
     return alert(
       "Campeón, subcampeón y tercer lugar deben ser equipos diferentes"
     );
+  }
+
+  const { data: firstMatch, error: firstMatchError } = await client
+    .from("matches")
+    .select("match_date")
+    .order("match_date")
+    .limit(1)
+    .single();
+
+  if (firstMatchError) return alert(firstMatchError.message);
+
+  if (new Date() >= new Date(firstMatch.match_date)) {
+    return alert("Los Pronósticos Especiales ya están cerrados");
   }
 
   const { error } = await client
