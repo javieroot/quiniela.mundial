@@ -1,52 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pronostix</title>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pronostix</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
-<body>
+<body class="bg-slate-100 text-slate-900">
+  <div id="app" class="max-w-5xl mx-auto p-4"></div>
 
-    <h1>Pronostix</h1>
-
-    <h2>Registro</h2>
-
-    <input id="username" placeholder="Usuario">
-    <br><br>
-
-    <input id="displayName" placeholder="Nombre visible">
-    <br><br>
-
-    <input id="password" type="password" placeholder="Contraseña">
-    <br><br>
-
-    <button id="registerBtn">
-        Registrar
-    </button>
-
-    <hr>
-
-    <h2>Login</h2>
-
-    <input id="loginUsername" placeholder="Usuario">
-    <br><br>
-
-    <input id="loginPassword" type="password" placeholder="Contraseña">
-    <br><br>
-
-    <button id="loginBtn">
-        Entrar
-    </button>
-
-    <pre id="output"></pre>
-
-    <script src="config.js"></script>
-    <script src="app.js"></script>
-
+  <script src="config.js"></script>
+  <script src="app.js"></script>
 </body>
-
 </html>
