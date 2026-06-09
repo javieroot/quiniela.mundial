@@ -272,10 +272,6 @@ async function saveSettings() {
     .eq("id", 1)
     .select();
 
-  console.log("SETTINGS UPDATE");
-  console.log("DATA:", data);
-  console.log("ERROR:", error);
-
   if (error) {
     alert(error.message);
     return;
