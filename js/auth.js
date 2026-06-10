@@ -1,31 +1,47 @@
 (function () {
   const P = window.Pronostix;
+  const UI = window.PronostixUI;
 
   function renderAuth(mode = "login") {
     const isRegister = mode === "register";
     const isReset = mode === "reset";
-    P.app.innerHTML = `<main class="auth-page"><section class="card auth-card"><h1 class="auth-title">Pronostix</h1><p class="auth-subtitle">Tu quiniela del torneo, limpia y segura.</p><div class="stack">${isRegister ? registerForm() : isReset ? resetForm() : loginForm()}</div></section></main>`;
+    P.app.innerHTML = `<main class="auth-page"><section class="card auth-card">
+      <h1 class="auth-title">Pronostix</h1>
+      <p class="auth-subtitle">Tu quiniela del torneo, limpia y segura.</p>
+      <div class="stack">
+        ${isRegister ? registerForm() : isReset ? resetForm() : loginForm()}
+      </div>
+    </section></main>`;
   }
 
-  const loginForm = () => `<input id="email" class="input" placeholder="Email" type="email" autocomplete="email">
+  const loginForm = () => `<input id="email" class="input" placeholder="Correo electrónico" type="email" autocomplete="email">
     <input id="password" class="input" placeholder="Contraseña" type="password" autocomplete="current-password">
     <button class="btn btn-primary w-full" onclick="PronostixAuth.login()">Entrar</button>
     <button class="btn btn-secondary w-full" onclick="PronostixAuth.renderAuth('register')">Registrarme</button>
     <button class="link-btn" onclick="PronostixAuth.renderAuth('reset')">Olvidé mi contraseña</button>`;
 
-  const registerForm = () => `<input id="email" class="input" placeholder="Email" type="email" autocomplete="email">
-    <input id="username" class="input" placeholder="Username único" autocomplete="username">
+  const registerForm = () => `<input id="email" class="input" placeholder="Correo electrónico" type="email" autocomplete="email">
+    <input id="username" class="input" placeholder="Usuario único" autocomplete="username">
     <input id="display" class="input" placeholder="Nombre visible">
     <input id="password" class="input" placeholder="Contraseña" type="password" autocomplete="new-password">
     <button class="btn btn-primary w-full" onclick="PronostixAuth.register()">Crear cuenta</button>
     <button class="btn btn-secondary w-full" onclick="PronostixAuth.renderAuth('login')">Ya tengo cuenta</button>`;
 
-  const resetForm = () => `<input id="email" class="input" placeholder="Email" type="email" autocomplete="email">
+  const resetForm = () => `<input id="email" class="input" placeholder="Correo electrónico" type="email" autocomplete="email">
     <button class="btn btn-primary w-full" onclick="PronostixAuth.resetPassword()">Enviar recuperación</button>
     <button class="btn btn-secondary w-full" onclick="PronostixAuth.renderAuth('login')">Volver</button>`;
 
   function renderUpdatePassword() {
-    P.app.innerHTML = `<main class="auth-page"><section class="card auth-card"><h1 class="auth-title">Nueva contraseña</h1><p class="auth-subtitle">Captura tu nueva contraseña para terminar la recuperación.</p><div class="stack"><input id="newPassword" class="input" placeholder="Nueva contraseña" type="password" autocomplete="new-password"><input id="confirmPassword" class="input" placeholder="Confirmar contraseña" type="password" autocomplete="new-password"><button class="btn btn-primary w-full" onclick="PronostixAuth.updatePassword()">Actualizar contraseña</button><button class="btn btn-secondary w-full" onclick="PronostixAuth.logout()">Cancelar</button></div></section></main>`;
+    P.app.innerHTML = `<main class="auth-page"><section class="card auth-card">
+      <h1 class="auth-title">Nueva contraseña</h1>
+      <p class="auth-subtitle">Captura tu nueva contraseña para terminar la recuperación.</p>
+      <div class="stack">
+        <input id="newPassword" class="input" placeholder="Nueva contraseña" type="password" autocomplete="new-password">
+        <input id="confirmPassword" class="input" placeholder="Confirmar contraseña" type="password" autocomplete="new-password">
+        <button class="btn btn-primary w-full" onclick="PronostixAuth.updatePassword()">Actualizar contraseña</button>
+        <button class="btn btn-secondary w-full" onclick="PronostixAuth.logout()">Cancelar</button>
+      </div>
+    </section></main>`;
   }
 
   async function register() {
@@ -34,7 +50,14 @@
     const username = P.val("username");
     const displayName = P.val("display");
     if (!email || !password || !username || !displayName) return P.toast("Completa email, username, nombre visible y contraseña.", false);
-    const { error } = await P.sb.auth.signUp({ email, password, options: { data: { username, display_name: displayName }, emailRedirectTo: P.siteUrl() } });
+    const { error } = await P.sb.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username, display_name: displayName },
+        emailRedirectTo: P.siteUrl()
+      }
+    });
     P.toast(error ? error.message : "Cuenta creada. Si Supabase requiere confirmación, revisa tu email.", !error);
   }
 
@@ -55,7 +78,7 @@
     const email = P.val("email");
     if (!email) return P.toast("Escribe tu email para recuperar contraseña.", false);
     const { error } = await P.sb.auth.resetPasswordForEmail(email, { redirectTo: P.siteUrl() });
-    P.toast(error ? error.message : "Email de recuperación enviado. Revisa también spam.", !error);
+    P.toast(error ? error.message : "Correo de recuperación enviado. Revisa también spam.", !error);
   }
 
   async function updatePassword() {
