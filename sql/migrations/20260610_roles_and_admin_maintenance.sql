@@ -1,6 +1,14 @@
 -- Pronostix v2 - roles y mantenimiento administrativo seguro
--- Ejecuta en bases existentes después de sql/schema.sql.
--- No crea usuarios. Solo agrega estructura de roles y funciones RPC de mantenimiento.
+-- Para qué sirve:
+--   Agrega roles operativos ROOT/ADMIN/USER y RPCs de mantenimiento protegidas en SQL.
+-- Cuándo ejecutarla:
+--   En bases existentes después de sql/schema.sql y antes de usar el panel de mantenimiento/admin roles.
+-- Qué agrega:
+--   profiles.role, helpers is_root/is_admin, set_profile_role(), reset_test_data() y reset_tournament_results().
+-- Qué NO hace:
+--   No crea usuarios, no borra calendario base, no cambia equipos/partidos/jugadores y no ejecuta seeds.
+-- Nota de seguridad:
+--   Los reset hacen borrados globales por diseño, pero validan auth.uid() y privilegios ROOT/ADMIN dentro de SQL.
 
 begin;
 
@@ -33,6 +41,7 @@ returns boolean language sql stable security definer set search_path = public as
   select exists(select 1 from public.profiles p where p.id = uid and p.role = 'ROOT');
 $$;
 
+revoke execute on function public.is_root(uuid) from public, anon;
 grant execute on function public.is_root(uuid) to authenticated;
 
 create or replace function public.is_admin(uid uuid default auth.uid())
@@ -45,6 +54,7 @@ returns boolean language sql stable security definer set search_path = public as
   );
 $$;
 
+revoke execute on function public.is_admin(uuid) from public, anon;
 grant execute on function public.is_admin(uuid) to authenticated;
 
 create or replace function public.sync_profile_admin_from_role()
@@ -103,6 +113,7 @@ begin
 end;
 $$;
 
+revoke execute on function public.set_profile_role(uuid, varchar) from public, anon;
 grant execute on function public.set_profile_role(uuid, varchar) to authenticated;
 
 create or replace function public.assert_current_user_admin()
@@ -118,6 +129,7 @@ begin
 end;
 $$;
 
+revoke execute on function public.assert_current_user_admin() from public, anon;
 grant execute on function public.assert_current_user_admin() to authenticated;
 
 create or replace function public.reset_test_data()
@@ -140,7 +152,8 @@ begin
 end;
 $$;
 
-comment on function public.reset_test_data() is 'Limpia datos de prueba y deja el torneo listo para iniciar desde cero.';
+comment on function public.reset_test_data() is 'Limpia datos de prueba con borrados globales por diseño. Valida auth.uid() y privilegios ROOT/ADMIN mediante assert_current_user_admin(); no borra torneos, settings, teams, matches, players, profiles ni auth.users.';
+revoke execute on function public.reset_test_data() from public, anon;
 grant execute on function public.reset_test_data() to authenticated;
 
 create or replace function public.reset_tournament_results()
@@ -157,7 +170,8 @@ begin
 end;
 $$;
 
-comment on function public.reset_tournament_results() is 'Limpia únicamente resultados capturados para volver a simular el torneo sin borrar pronósticos.';
+comment on function public.reset_tournament_results() is 'Limpia resultados capturados con borrados globales por diseño. Valida auth.uid() y privilegios ROOT/ADMIN mediante assert_current_user_admin(); conserva pronósticos, usuarios, calendario, equipos, jugadores y settings.';
+revoke execute on function public.reset_tournament_results() from public, anon;
 grant execute on function public.reset_tournament_results() to authenticated;
 
 commit;

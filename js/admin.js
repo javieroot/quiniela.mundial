@@ -19,6 +19,7 @@
 
     UI.shell(`${renderSettings()}
       ${renderPrivilegeInfo()}
+      ${renderRolesMigrationInfo()}
       ${renderAutomationSettings()}
       ${renderPoolSummary(officialPrizes)}
       ${renderUsers(users || [])}
@@ -77,6 +78,19 @@
     </section>`;
   }
 
+  function renderRolesMigrationInfo() {
+    return `<section class="card p-5"><h3 class="text-xl font-black">Migración de roles y mantenimiento</h3>
+      <p class="text-slate-600 mt-1"><code>sql/migrations/20260610_roles_and_admin_maintenance.sql</code> prepara la base para controlar privilegios y ejecutar limpiezas seguras desde RPC.</p>
+      <div class="grid md:grid-cols-4 gap-3 mt-3">
+        <article class="prize-place"><h4>Para qué sirve</h4><p class="text-sm">Agrega roles ROOT/ADMIN/USER y procedimientos de mantenimiento del torneo.</p></article>
+        <article class="prize-place"><h4>Cuándo ejecutarla</h4><p class="text-sm">Después de tener la estructura base y antes de usar mantenimiento o control de roles.</p></article>
+        <article class="prize-place"><h4>Qué agrega</h4><p class="text-sm">Columna <code>profiles.role</code>, helpers de permisos, <code>set_profile_role()</code>, <code>reset_test_data()</code> y <code>reset_tournament_results()</code>.</p></article>
+        <article class="prize-place"><h4>Qué NO hace</h4><p class="text-sm">No crea usuarios, no carga seeds, no borra equipos, partidos, jugadores, torneo ni configuración.</p></article>
+      </div>
+      <p class="text-sm text-slate-500 mt-3">Los botones de reset no son la seguridad principal: las RPC validan <code>auth.uid()</code> y rol ROOT/ADMIN dentro de SQL. Sus borrados son globales por diseño para reiniciar pruebas/resultados del torneo.</p>
+    </section>`;
+  }
+
   function renderPoolSummary(prizes) {
     return `<section class="card p-5"><h3 class="text-xl font-black">Resumen oficial de bolsa</h3>
       <p class="mt-1">Bolsa: <b>${P.money(prizes.pool)}</b> · Comisión admin: <b>${P.money(prizes.adminFee)}</b> · Bolsa neta: <b>${P.money(prizes.netPool)}</b></p>
@@ -113,6 +127,7 @@
   function renderMaintenance() {
     return `<section class="card p-5"><h3 class="text-xl font-black">Mantenimiento del torneo</h3>
       <p class="text-slate-600 mt-1">Herramientas seguras para pruebas y operación. Requieren ejecutar la migración <code>sql/migrations/20260610_roles_and_admin_maintenance.sql</code>.</p>
+      <p class="text-sm text-slate-500 mt-2">Las limpiezas se validan en SQL con <code>auth.uid()</code> y rol ROOT/ADMIN. No dependen únicamente del botón del frontend. Los borrados indicados son globales por diseño.</p>
       <div class="grid md:grid-cols-2 gap-4 mt-3">
         <article class="prize-place"><h4>Limpiar datos de prueba</h4><p class="text-sm text-slate-700">Limpia datos de prueba y deja el torneo listo para iniciar desde cero.</p><p class="text-sm"><b>Borra:</b> pronósticos, especiales capturados, resultados especiales y audit logs si existen.</p><p class="text-sm"><b>Conserva:</b> torneos, configuración, equipos, partidos, jugadores, perfiles reales y auth.users.</p><button class="btn btn-secondary mt-3" onclick="PronostixAdmin.resetTestData()">Limpiar datos de prueba</button></article>
         <article class="prize-place"><h4>Limpiar resultados</h4><p class="text-sm text-slate-700">Limpia únicamente resultados capturados para volver a simular el torneo sin borrar pronósticos.</p><p class="text-sm"><b>Borra:</b> resultados especiales.</p><p class="text-sm"><b>Conserva:</b> pronósticos, especiales, usuarios, perfiles, equipos, partidos, jugadores y configuración.</p><button class="btn btn-secondary mt-3" onclick="PronostixAdmin.resetTournamentResults()">Limpiar resultados</button></article>
