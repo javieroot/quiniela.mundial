@@ -1,6 +1,0 @@
-window.PRONOSTIX_CONFIG = {
-  supabaseUrl: "https://ahgmmntturtuhvjuggmz.supabase.co",
-  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoZ21tbnR0dXJ0dWh2anVnZ216Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNDk5OTUsImV4cCI6MjA5NjYyNTk5NX0.4Xw2Fbg76_nSo1Tx8lqPLkTzzU6RZ72MbF4e9jtgoIo",
-  platformName: "Pronostix v2",
-  siteUrl: "https://javieroot.github.io/quiniela.mundial/"
-};
