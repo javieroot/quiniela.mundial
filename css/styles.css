@@ -1,3 +1,13 @@
-body { min-height: 100vh; }
-input { outline: none; }
-input:focus { border-color: rgb(37 99 235); box-shadow: 0 0 0 1px rgb(37 99 235); }
+body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.card{background:white;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 10px 25px #0f172a12}
+.btn{border-radius:12px;padding:.55rem .9rem;font-weight:800}
+.btn-primary{background:#2563eb;color:white}
+.btn-secondary{background:#e2e8f0;color:#0f172a}
+.input{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:.6rem .75rem;background:white}
+.input:disabled{background:#f1f5f9;color:#64748b}
+.badge{border-radius:999px;padding:.15rem .5rem;font-size:.75rem;font-weight:900}
+.paid{background:#dcfce7;color:#166534}
+.unpaid{background:#fef3c7;color:#92400e}
+td,th{padding:.55rem .65rem;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+th{text-align:left;color:#475569;font-size:.75rem;text-transform:uppercase}
+.table{overflow-x:auto}
