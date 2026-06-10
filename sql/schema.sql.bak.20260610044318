@@ -66,11 +66,6 @@ create table public.settings(
   second_place_percentage numeric(5,2) not null default 30,
   third_place_percentage numeric(5,2) not null default 20,
   lock_minutes_before_match int not null default 1,
-  results_api_enabled boolean not null default false,
-  results_api_provider text,
-  results_api_base_url text,
-  special_results_api_enabled boolean not null default false,
-  special_results_api_provider text,
   updated_at timestamptz not null default now(),
   check(admin_percentage between 0 and 100),
   check(first_place_percentage + second_place_percentage + third_place_percentage = 100)
@@ -260,12 +255,12 @@ begin
   (mex,tid,'México','MEX'),(arg,tid,'Argentina','ARG'),(bra,tid,'Brasil','BRA'),(fra,tid,'Francia','FRA'),(ger,tid,'Alemania','GER'),(esp,tid,'España','ESP');
   insert into public.players(id,tournament_id,team_id,name) values
   (scorer,tid,mex,'Santiago Giménez'),(p2,tid,arg,'Lionel Messi'),(p3,tid,fra,'Kylian Mbappé');
-  insert into public.matches(id,tournament_id,home_team_id,away_team_id,kickoff_at,group_name,stadium,city,home_score,away_score,status) values
-  (m1,tid,mex,arg,now()-interval '5 days','Grupo A','Estadio Azteca','Ciudad de México',2,1,'FINISHED'),
-  (m2,tid,bra,fra,now()-interval '4 days','Grupo B','MetLife Stadium','Nueva York/Nueva Jersey',0,0,'FINISHED'),
-  (m3,tid,ger,esp,now()-interval '3 days','Grupo C','SoFi Stadium','Los Ángeles',1,3,'FINISHED'),
-  (m4,tid,mex,bra,now()+interval '30 seconds','Grupo A','Estadio Akron','Guadalajara',null,null,'SCHEDULED'),
-  (m5,tid,arg,esp,now()+interval '2 hours','Grupo D','AT&T Stadium','Dallas',null,null,'SCHEDULED');
+  insert into public.matches(id,tournament_id,home_team_id,away_team_id,kickoff_at,home_score,away_score,status) values
+  (m1,tid,mex,arg,now()-interval '5 days',2,1,'FINISHED'),
+  (m2,tid,bra,fra,now()-interval '4 days',0,0,'FINISHED'),
+  (m3,tid,ger,esp,now()-interval '3 days',1,3,'FINISHED'),
+  (m4,tid,mex,bra,now()+interval '30 seconds',null,null,'SCHEDULED'),
+  (m5,tid,arg,esp,now()+interval '2 hours',null,null,'SCHEDULED');
 
   alter table public.predictions disable trigger predictions_lock;
   insert into public.predictions(user_id,match_id,home_score,away_score,updated_at) values

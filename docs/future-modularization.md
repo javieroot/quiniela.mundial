@@ -60,3 +60,10 @@ Separar `js/app.js` en módulos pequeños sin cambiar comportamiento.
 - No cambiar reglas de negocio.
 - Refactor en commits pequeños.
 - Después de mover cada módulo, probar login, ranking, admin y predicciones.
+
+## Preparación futura de automatizaciones
+
+- `matches.group_name`, `matches.stadium` y `matches.city` ya están contemplados para mejorar presentación.
+- `settings.results_api_enabled` y campos relacionados dejan lista la configuración para una API opcional de resultados.
+- `settings.special_results_api_enabled` deja lista la configuración para automatizar especiales después.
+- Ninguna automatización debe bloquear la captura manual ni el despliegue actual.
