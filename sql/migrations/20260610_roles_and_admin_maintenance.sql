@@ -137,12 +137,13 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   perform public.assert_current_user_admin();
 
-  delete from public.predictions;
-  delete from public.special_predictions;
-  delete from public.special_results;
+  -- WHERE true mantiene la limpieza global intencional y evita el bloqueo de Supabase/pg-safeupdate a DELETE sin WHERE.
+  delete from public.predictions where true;
+  delete from public.special_predictions where true;
+  delete from public.special_results where true;
 
   if to_regclass('public.audit_logs') is not null then
-    delete from public.audit_logs;
+    delete from public.audit_logs where true;
   end if;
 
   update public.matches
@@ -161,7 +162,8 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   perform public.assert_current_user_admin();
 
-  delete from public.special_results;
+  -- WHERE true mantiene la limpieza global intencional y evita el bloqueo de Supabase/pg-safeupdate a DELETE sin WHERE.
+  delete from public.special_results where true;
 
   update public.matches
   set home_score = null,
