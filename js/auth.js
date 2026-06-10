@@ -4,7 +4,7 @@
   function renderAuth(mode = "login") {
     const isRegister = mode === "register";
     const isReset = mode === "reset";
-    P.app.innerHTML = `<main class="auth-page"><section class="card auth-card"><h1 class="auth-title">Pronostix</h1><p class="auth-subtitle">Tu quiniela familiar, limpia y segura.</p><div class="stack">${isRegister ? registerForm() : isReset ? resetForm() : loginForm()}</div></section></main>`;
+    P.app.innerHTML = `<main class="auth-page"><section class="card auth-card"><h1 class="auth-title">Pronostix</h1><p class="auth-subtitle">Tu quiniela del torneo, limpia y segura.</p><div class="stack">${isRegister ? registerForm() : isReset ? resetForm() : loginForm()}</div></section></main>`;
   }
 
   const loginForm = () => `<input id="email" class="input" placeholder="Email" type="email" autocomplete="email">

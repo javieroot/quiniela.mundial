@@ -29,7 +29,7 @@
     const [teams, players, matches] = await Promise.all([
       P.sb.from("teams").select("*").eq("tournament_id", tid).order("name"),
       P.sb.from("players").select("*").eq("tournament_id", tid).order("name"),
-      P.sb.from("matches").select("*, home_team:teams!matches_home_team_id_fkey(id,name,short_name), away_team:teams!matches_away_team_id_fkey(id,name,short_name)").eq("tournament_id", tid).order("kickoff_at")
+      P.sb.from("matches").select("*, home_team:teams!matches_home_team_id_fkey(id,name,code), away_team:teams!matches_away_team_id_fkey(id,name,code)").eq("tournament_id", tid).order("kickoff_at")
     ]);
     if (teams.error) P.toast(teams.error.message, false);
     if (players.error) P.toast(players.error.message, false);

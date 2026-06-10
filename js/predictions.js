@@ -82,7 +82,8 @@
       user_id: P.state.session.user.id,
       match_id: matchId,
       home_score: P.num(P.val(`home-${matchId}`)),
-      away_score: P.num(P.val(`away-${matchId}`))
+      away_score: P.num(P.val(`away-${matchId}`)),
+      updated_at: new Date().toISOString()
     };
 
     if (payload.home_score == null || payload.away_score == null) {
