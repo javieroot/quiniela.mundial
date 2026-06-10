@@ -127,25 +127,11 @@
     return { pool, adminFee, netPool, places };
   }
 
-  function renderPrizeSummary(title, prizes) {
+  function renderPrizeSummary(title, prizes, adminView = false) {
     return `<section class="card p-5 prize-card">
-      <div class="section-title">
-        <div>
-          <h3>${P.esc(title)}</h3>
-          <p>Bolsa: <b>${P.money(prizes.pool)}</b> · Comisión admin: <b>${P.money(prizes.adminFee)}</b> · Bolsa neta: <b>${P.money(prizes.netPool)}</b></p>
-        </div>
-      </div>
-
+      <div class="section-title"><div><h3>${P.esc(title)}</h3><p>Bolsa de premios: <b>${P.money(prizes.netPool)}</b>${adminView ? ` · Bolsa total: <b>${P.money(prizes.pool)}</b> · Comisión admin: <b>${P.money(prizes.adminFee)}</b>` : ""}</p></div></div>
       <div class="grid md:grid-cols-3 gap-3 mt-3">
-        ${prizes.places.map(place => `<div class="prize-place">
-          <h4>${place.place}° lugar · ${place.percentage}%</h4>
-          <p>Premio: <b>${P.money(place.prize)}</b></p>
-          ${
-            place.winners.length
-              ? place.winners.map(winner => `<p>${P.esc(winner.display_name)} recibe <b>${P.money(place.each)}</b></p>`).join("")
-              : "<p class='text-slate-500'>Sin ganador por ahora.</p>"
-          }
-        </div>`).join("")}
+        ${prizes.places.map(place => `<div class="prize-place"><h4>${place.place}° lugar</h4><p>Monto total: <b>${P.money(place.prize)}</b>${adminView ? ` <small>(${place.percentage}%)</small>` : ""}</p>${place.winners.length ? place.winners.map(winner => `<p>${UI.userChip(winner, false)} recibe <b>${P.money(place.each)}</b></p>`).join("") : "<p class='text-slate-500'>Sin ganador por ahora.</p>"}</div>`).join("")}
       </div>
     </section>`;
   }
@@ -198,7 +184,7 @@
           <h2>🏆 Ranking ${officialOnly ? "oficial" : "general"}</h2>
           <p>${officialOnly ? "Solo usuarios con pago confirmado participan por premios reales." : "Incluye a todos y simula premios como si todos hubieran pagado."}</p>
         </div>
-        <span class="pill">Ranking denso: 1, 1, 2, 3</span>
+        <span class="pill">Los empates comparten posición y premio.</span>
       </div>
     </section>
 

@@ -9,7 +9,7 @@
 
   function matchVenue(match) {
     const parts = [];
-    if (match.group_name) parts.push(`Grupo ${P.esc(match.group_name)}`);
+    if (match.group_name) parts.push(P.esc(match.group_name).toLowerCase().startsWith("grupo") ? P.esc(match.group_name) : `Grupo ${P.esc(match.group_name)}`);
     if (match.stadium) parts.push(P.esc(match.stadium));
     if (match.city) parts.push(P.esc(match.city));
     return parts.length
@@ -61,14 +61,14 @@
 
       <div class="score-editor">
         <label>
-          ${P.esc(match.home_team?.short_name || match.home_team?.code || "Local")}
+          ${P.esc(match.home_team?.code || match.home_team?.name || "Local")}
           <input id="home-${match.id}" class="input score-input" type="number" min="0" value="${pred?.home_score ?? ""}" ${locked ? "disabled" : ""}>
         </label>
 
         <span class="dash">-</span>
 
         <label>
-          ${P.esc(match.away_team?.short_name || match.away_team?.code || "Visita")}
+          ${P.esc(match.away_team?.code || match.away_team?.name || "Visita")}
           <input id="away-${match.id}" class="input score-input" type="number" min="0" value="${pred?.away_score ?? ""}" ${locked ? "disabled" : ""}>
         </label>
 

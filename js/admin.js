@@ -117,13 +117,13 @@
     const s = P.state.settings || {};
 
     return `<section class="card p-5">
-      <h3 class="text-xl font-black">Preparación para resultados automáticos</h3>
-      <p class="text-slate-600 mt-1">La captura manual sigue siendo el respaldo principal. Esta sección solo deja lista la configuración para conectar una API después.</p>
+      <h3 class="text-xl font-black">Preparación para API futura</h3>
+      <p class="text-slate-600 mt-1">La captura manual sigue siendo la fuente principal. La API automática NO está implementada; estos campos solo preparan una integración futura.</p>
 
       <div class="grid md:grid-cols-2 gap-4 mt-3">
         <label>
           <input id="resultsApiEnabled" type="checkbox" ${s.results_api_enabled ? "checked" : ""}>
-          Habilitar API automática de resultados de partidos
+          Preparar API futura de resultados de partidos
         </label>
 
         <label>
@@ -142,7 +142,7 @@
         </label>
       </div>
 
-      <button class="btn btn-secondary mt-3" onclick="PronostixAdmin.saveAutomationSettings()">Guardar preparación API</button>
+      <div class="flex gap-2 mt-3"><button class="btn btn-secondary" onclick="PronostixAdmin.saveAutomationSettings()">Guardar preparación API</button><button class="btn btn-secondary" disabled>Sincronizar resultados (próximamente)</button></div>
       <p class="text-sm text-slate-500 mt-2">Si falla este guardado, ejecuta primero la migración <code>sql/migrations/20260610_match_metadata_and_api_flags.sql</code>.</p>
     </section>`;
   }
@@ -151,7 +151,7 @@
     return `<section class="card p-5">
       <h3 class="text-xl font-black">Resumen oficial de bolsa</h3>
       <p class="mt-1">Bolsa: <b>${P.money(prizes.pool)}</b> · Comisión admin: <b>${P.money(prizes.adminFee)}</b> · Bolsa neta: <b>${P.money(prizes.netPool)}</b></p>
-      ${Rankings.renderPrizeSummary("Premios calculados", prizes)}
+      ${Rankings.renderPrizeSummary("Premios calculados", prizes, true)}
     </section>`;
   }
 
@@ -192,7 +192,7 @@
   function renderMatchResults(matches) {
     return `<section class="card p-5">
       <h3 class="text-xl font-black">Resultados de partidos</h3>
-      <p class="text-slate-600 mt-1">La captura manual se mantiene como respaldo aunque después se conecte una API.</p>
+      <p class="text-slate-600 mt-1">La captura manual es la fuente principal de resultados. La API automática queda para una fase futura.</p>
 
       <div class="match-list mt-3">
         ${matches.map(match => `<article class="admin-result-row">
@@ -218,7 +218,7 @@
   function renderSpecialResults(teams, players, result) {
     return `<section class="card p-5">
       <h3 class="text-xl font-black">Resultados especiales</h3>
-      <p class="text-slate-600 mt-1">Captura manual activa; la automatización queda preparada para después.</p>
+      <p class="text-slate-600 mt-1">Captura manual activa. La automatización de especiales queda preparada para después, pero no está implementada.</p>
 
       <div class="grid md:grid-cols-4 gap-3 mt-3">
         <label>

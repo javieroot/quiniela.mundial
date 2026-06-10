@@ -1,69 +1,21 @@
-# Propuesta futura de modularización
+# Estado de modularización
 
-No se recomienda hacer un refactor grande antes de producción. La app debe salir estable primero.
+La modularización principal ya está aplicada.
 
-## Objetivo
+## Estado actual
 
-Separar `js/app.js` en módulos pequeños sin cambiar comportamiento.
+- `js/core.js`: configuración, cliente Supabase único, estado global y helpers.
+- `js/data.js`: consultas Supabase compartidas.
+- `js/ui.js`: shell, navegación y helpers visuales.
+- `js/auth.js`: registro, login, logout y recuperación.
+- `js/dashboard.js`: inicio.
+- `js/predictions.js`: pronósticos por partido.
+- `js/specials.js`: pronósticos especiales.
+- `js/rankings.js`: rankings, puntos y premios.
+- `js/rules.js`: reglas y FAQ.
+- `js/admin.js`: panel administrador.
+- `js/app.js`: bootstrap/router.
 
-## Orden sugerido
+## Pendiente futuro
 
-1. `js/core/config.js`
-   - lectura de `window.PRONOSTIX_CONFIG`
-   - validación de `supabaseUrl`, `supabaseAnonKey`, `siteUrl`
-
-2. `js/core/supabase.js`
-   - creación del cliente Supabase
-   - helpers de sesión
-
-3. `js/core/state.js`
-   - estado global
-   - carga inicial de usuario, perfil, torneos, settings
-
-4. `js/features/auth.js`
-   - login
-   - registro
-   - recuperación
-   - cambio de contraseña post-redirect
-
-5. `js/features/predictions.js`
-   - render de partidos
-   - guardado de pronósticos
-   - bloqueo visible
-
-6. `js/features/specials.js`
-   - especiales
-   - validación de no repetir campeón/subcampeón/tercer lugar
-
-7. `js/features/rankings.js`
-   - cálculo de puntos
-   - ranking denso
-   - desempates
-   - premios
-
-8. `js/features/admin.js`
-   - pagos
-   - resultados
-   - settings
-   - resumen de bolsa
-
-9. `js/ui/components.js`
-   - botones
-   - tablas
-   - cards
-   - toast
-
-## Reglas para cuando se haga
-
-- No cambiar SQL.
-- No cambiar nombres de columnas.
-- No cambiar reglas de negocio.
-- Refactor en commits pequeños.
-- Después de mover cada módulo, probar login, ranking, admin y predicciones.
-
-## Preparación futura de automatizaciones
-
-- `matches.group_name`, `matches.stadium` y `matches.city` ya están contemplados para mejorar presentación.
-- `settings.results_api_enabled` y campos relacionados dejan lista la configuración para una API opcional de resultados.
-- `settings.special_results_api_enabled` deja lista la configuración para automatizar especiales después.
-- Ninguna automatización debe bloquear la captura manual ni el despliegue actual.
+No hacer refactor grande antes de liberar. Si crece el proyecto, evaluar build con Vite o módulos ES, pero mantener compatibilidad GitHub Pages.
