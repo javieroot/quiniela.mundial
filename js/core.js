@@ -2,7 +2,16 @@
   const cfg = window.PRONOSTIX_CONFIG || {};
   const app = document.getElementById("app");
   const hasSupabase = Boolean(window.supabase?.createClient);
-  const sb = hasSupabase ? window.supabase.createClient(cfg.supabaseUrl || "", cfg.supabaseAnonKey || "") : null;
+  const existingClient = window.Pronostix?.sb || window.__PRONOSTIX_SUPABASE_CLIENT__ || null;
+  const sb = existingClient || (hasSupabase ? window.supabase.createClient(cfg.supabaseUrl || "", cfg.supabaseAnonKey || "", {
+    auth: {
+      storageKey: "pronostix-auth",
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  }) : null);
+  if (sb && !window.__PRONOSTIX_SUPABASE_CLIENT__) window.__PRONOSTIX_SUPABASE_CLIENT__ = sb;
   const state = {
     session: null,
     profile: null,
