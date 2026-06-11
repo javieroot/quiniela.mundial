@@ -73,7 +73,7 @@ create table public.settings(
   special_results_api_provider text,
   updated_at timestamptz not null default now(),
   check(admin_percentage between 0 and 100),
-  check(first_place_percentage + second_place_percentage + third_place_percentage = 100)
+  check(admin_percentage + first_place_percentage + second_place_percentage + third_place_percentage = 100)
 );
 
 create table public.predictions(

@@ -18,10 +18,11 @@ Ejecuta en Supabase SQL Editor en este orden:
 1. `sql/schema.sql` si la base es nueva.
 2. `sql/migrations/20260610_match_metadata_and_api_flags.sql` si la base ya existía.
 3. `sql/migrations/20260610_roles_and_admin_maintenance.sql` para ROOT/ADMIN y mantenimiento.
-4. `sql/seed_base_data.sql` para dejar inscripción 200 MXN, premios 50/25/15 y admin 10%.
-5. `sql/seed_worldcup_2026.sql` para calendario/equipos.
-6. `sql/seed_worldcup_2026_players_candidates.sql` para goleadores.
-7. `sql/validate_worldcup_2026_seed.sql` para validar carga base.
+4. `sql/migrations/20260611_settings_distribution_90_10.sql` para corregir distribución 90/10.
+5. `sql/seed_base_data.sql` para dejar inscripción 200 MXN, premios 50/25/15 y admin 10%.
+6. `sql/seed_worldcup_2026.sql` para calendario/equipos.
+7. `sql/seed_worldcup_2026_players_candidates.sql` para goleadores.
+8. `sql/validate_worldcup_2026_seed.sql` para validar carga base.
 
 ## 3. Limpieza antes de producción
 
@@ -42,7 +43,7 @@ Si hubo datos de prueba:
 - General muestra todos los usuarios.
 - Oficial muestra solo PAGADO.
 - Especiales no permiten repetir equipos.
-- Premios: 50%, 25%, 15%.
+- Premios: 50%, 25%, 15% del total; admin: 10%.
 - Admin: 10% no visible para usuario.
 - Inscripción: 200 MXN.
 - Bloqueo: 1 minuto antes del partido.

@@ -44,7 +44,7 @@
     const s = P.state.settings || {};
     return `<section class="card p-5"><div class="section-title"><div><h2>Panel de administración</h2><p>El permiso real viene de <code>profiles.is_admin</code>, no del frontend.</p></div></div>
       <div class="grid md:grid-cols-2 gap-5 mt-4">
-        <div><h3 class="font-black">Configuración económica y bloqueo</h3><p class="text-sm text-slate-500">Premios 1°+2°+3° deben sumar 100. Comisión admin debe estar entre 0 y 100.</p>
+        <div><h3 class="font-black">Configuración económica y bloqueo</h3><p class="text-sm text-slate-500">Premios 1°+2°+3° + comisión admin deben sumar 100.</p>
           <div class="form-grid mt-2">
             <label>Costo de inscripción<input id="entryFee" class="input" type="number" min="0" value="${s.entry_fee ?? 0}"></label>
             <label>% comisión admin<input id="adminPct" class="input" type="number" min="0" max="100" value="${s.admin_percentage ?? 0}"></label>
@@ -226,8 +226,8 @@
   function validateSettings(payload) {
     if (payload.entry_fee < 0 || payload.lock_minutes_before_match < 0) return "Costo y minutos de bloqueo no pueden ser negativos.";
     if (payload.admin_percentage < 0 || payload.admin_percentage > 100) return "La comisión admin debe estar entre 0 y 100%.";
-    const prizeSum = payload.first_place_percentage + payload.second_place_percentage + payload.third_place_percentage;
-    if (Math.abs(prizeSum - 100) > 0.001) return `Los porcentajes de premios deben sumar 100%. Actualmente suman ${prizeSum}%.`;
+    const totalDistribution = payload.admin_percentage + payload.first_place_percentage + payload.second_place_percentage + payload.third_place_percentage;
+    if (Math.abs(totalDistribution - 100) > 0.001) return `Comisión admin + premios deben sumar 100%. Actualmente suman ${totalDistribution}%.`;
     return null;
   }
 

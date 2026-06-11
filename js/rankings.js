@@ -117,7 +117,7 @@
 
     const places = [1, 2, 3].map(place => {
       const winners = rows.filter(row => row.position === place);
-      const prize = netPool * percentages[place] / 100;
+      const prize = pool * percentages[place] / 100;
       const each = winners.length ? prize / winners.length : 0;
       return { place, percentage: percentages[place], prize, each, winners };
     });
