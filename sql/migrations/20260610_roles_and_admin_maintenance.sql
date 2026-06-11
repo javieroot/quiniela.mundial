@@ -4,11 +4,11 @@
 -- Cuándo ejecutarla:
 --   En bases existentes después de sql/schema.sql y antes de usar el panel de mantenimiento/admin roles.
 -- Qué agrega:
---   profiles.role, helpers is_root/is_admin, set_profile_role(), reset_test_data() y reset_tournament_results().
+--   profiles.role, helpers is_root/is_admin, set_profile_role(), reset_user_entries(), reset_tournament_results() y reset_full_test().
 -- Qué NO hace:
 --   No crea usuarios, no borra calendario base, no cambia equipos/partidos/jugadores y no ejecuta seeds.
 -- Nota de seguridad:
---   Los reset hacen borrados globales por diseño, pero validan auth.uid() y privilegios ROOT/ADMIN dentro de SQL.
+--   Los reset validan auth.uid() y privilegios ROOT/ADMIN dentro de SQL; cada función limpia únicamente su alcance documentado.
 
 begin;
 
@@ -132,42 +132,27 @@ $$;
 revoke execute on function public.assert_current_user_admin() from public, anon;
 grant execute on function public.assert_current_user_admin() to authenticated;
 
-create or replace function public.reset_test_data()
+create or replace function public.reset_user_entries()
 returns void language plpgsql security definer set search_path = public as $$
 begin
   perform public.assert_current_user_admin();
 
-  -- Condiciones sobre columnas NOT NULL/PK mantienen la limpieza global intencional
-  -- y evitan el bloqueo de Supabase/pg-safeupdate a DELETE sin filtro real.
+  -- Limpia SOLO capturas de usuarios. No toca resultados del torneo.
   delete from public.predictions where id is not null;
   delete from public.special_predictions where id is not null;
-  delete from public.special_results where tournament_id is not null;
-
-  if to_regclass('public.audit_logs') is not null then
-    delete from public.audit_logs where id is not null;
-  end if;
-
-  update public.matches
-  set home_score = null,
-      away_score = null,
-      status = 'SCHEDULED'
-  where home_score is not null
-     or away_score is not null
-     or status <> 'SCHEDULED';
 end;
 $$;
 
-comment on function public.reset_test_data() is 'Limpia datos generados por pruebas: predictions, special_predictions, special_results y resultados capturados en matches. Valida auth.uid() y privilegios ROOT/ADMIN; conserva usuarios/profiles, pagos, roles, tournaments, settings, teams, matches y players.';
-revoke execute on function public.reset_test_data() from public, anon;
-grant execute on function public.reset_test_data() to authenticated;
+comment on function public.reset_user_entries() is 'Limpia SOLO capturas de usuarios: predictions y special_predictions. Valida auth.uid() y privilegios ROOT/ADMIN; conserva resultados, usuarios/profiles, auth.users, pagos, roles, tournaments, settings, teams, matches como calendario y players.';
+revoke execute on function public.reset_user_entries() from public, anon;
+grant execute on function public.reset_user_entries() to authenticated;
 
 create or replace function public.reset_tournament_results()
 returns void language plpgsql security definer set search_path = public as $$
 begin
   perform public.assert_current_user_admin();
 
-  -- Condición sobre columna PK mantiene la limpieza global intencional
-  -- y evita el bloqueo de Supabase/pg-safeupdate a DELETE sin filtro real.
+  -- Limpia SOLO resultados del torneo. No toca capturas de usuarios.
   delete from public.special_results where tournament_id is not null;
 
   update public.matches
@@ -180,8 +165,36 @@ begin
 end;
 $$;
 
-comment on function public.reset_tournament_results() is 'Limpia SOLO resultados: special_results y home_score/away_score/status en matches. Valida auth.uid() y privilegios ROOT/ADMIN; conserva predictions, special_predictions, usuarios/profiles, pagos, roles, tournaments, settings, teams, matches y players.';
+comment on function public.reset_tournament_results() is 'Limpia SOLO resultados del torneo: special_results y home_score/away_score/status en matches. Valida auth.uid() y privilegios ROOT/ADMIN; conserva predictions, special_predictions, usuarios/profiles, auth.users, pagos, roles, tournaments, settings, teams, matches como calendario y players.';
 revoke execute on function public.reset_tournament_results() from public, anon;
 grant execute on function public.reset_tournament_results() to authenticated;
+
+create or replace function public.reset_full_test()
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform public.assert_current_user_admin();
+
+  -- Reinicio completo de prueba: borra capturas de usuarios y resultados capturados.
+  delete from public.predictions where id is not null;
+  delete from public.special_predictions where id is not null;
+  delete from public.special_results where tournament_id is not null;
+
+  update public.matches
+  set home_score = null,
+      away_score = null,
+      status = 'SCHEDULED'
+  where home_score is not null
+     or away_score is not null
+     or status <> 'SCHEDULED';
+end;
+$$;
+
+comment on function public.reset_full_test() is 'Reinicia prueba completa: borra predictions, special_predictions, special_results y limpia resultados en matches. Valida auth.uid() y privilegios ROOT/ADMIN; conserva usuarios/profiles, auth.users, pagos, roles, tournaments, settings, teams, matches como calendario y players.';
+revoke execute on function public.reset_full_test() from public, anon;
+grant execute on function public.reset_full_test() to authenticated;
+
+-- El flujo nuevo usa reset_user_entries(), reset_tournament_results() y reset_full_test().
+-- Si existía el nombre anterior, se elimina para evitar ambigüedad operacional.
+drop function if exists public.reset_test_data();
 
 commit;
