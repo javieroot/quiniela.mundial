@@ -147,8 +147,9 @@
     return `<article class="maintenance-status ${ok ? "ok" : "danger"}"><span>${P.esc(title)}</span><b>${value ?? "—"}</b><small>${P.esc(copy)}</small></article>`;
   }
 
-  async function countRows(query) {
-    const { count, error } = await query.select("id", { count: "exact", head: true });
+  async function countRows(tableName, applyFilters = query => query) {
+    const query = applyFilters(P.sb.from(tableName).select("id", { count: "exact", head: true }));
+    const { count, error } = await query;
     if (error) {
       P.toast(error.message, false);
       return null;
@@ -159,12 +160,12 @@
   async function getMaintenanceSnapshot() {
     const tid = P.state.activeTournament?.id;
     const [predictions, specialPredictions, specialResults, finishedMatches, scoredMatches, dummyProfiles] = await Promise.all([
-      countRows(P.sb.from("predictions")),
-      countRows(P.sb.from("special_predictions")),
-      tid ? countRows(P.sb.from("special_results").eq("tournament_id", tid)) : 0,
-      tid ? countRows(P.sb.from("matches").eq("tournament_id", tid).eq("status", "FINISHED")) : 0,
-      tid ? countRows(P.sb.from("matches").eq("tournament_id", tid).not("home_score", "is", null).not("away_score", "is", null)) : 0,
-      countRows(P.sb.from("profiles").in("id", DUMMY_USER_IDS))
+      countRows("predictions"),
+      countRows("special_predictions"),
+      tid ? countRows("special_results", query => query.eq("tournament_id", tid)) : 0,
+      tid ? countRows("matches", query => query.eq("tournament_id", tid).eq("status", "FINISHED")) : 0,
+      tid ? countRows("matches", query => query.eq("tournament_id", tid).not("home_score", "is", null).not("away_score", "is", null)) : 0,
+      countRows("profiles", query => query.in("id", DUMMY_USER_IDS))
     ]);
     const results = (specialResults || 0) + Math.max(finishedMatches || 0, scoredMatches || 0);
     return {
