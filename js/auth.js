@@ -10,6 +10,7 @@
       <p class="auth-subtitle">Tu quiniela del torneo, limpia y segura.</p>
       <div class="stack">
         ${isRegister ? registerForm() : isReset ? resetForm() : loginForm()}
+        <div id="authFeedback" class="auth-feedback hidden" aria-live="polite"></div>
       </div>
     </section></main>`;
   }
@@ -26,7 +27,7 @@
     <input id="username" class="input" placeholder="Usuario único" autocomplete="username">
     <input id="display" class="input" placeholder="Nombre visible">
     ${passwordField("password", "Contraseña", "new-password")}
-    <button class="btn btn-primary w-full" onclick="PronostixAuth.register()">Crear cuenta</button>
+    <button id="registerButton" class="btn btn-primary w-full" onclick="PronostixAuth.register()">Crear cuenta</button>
     <button class="btn btn-secondary w-full" onclick="PronostixAuth.renderAuth('login')">Ya tengo cuenta</button>`;
 
   const resetForm = () => `<input id="email" class="input" placeholder="Correo electrónico" type="email" autocomplete="email">
@@ -42,6 +43,7 @@
         ${passwordField("confirmPassword", "Confirmar contraseña", "new-password")}
         <button class="btn btn-primary w-full" onclick="PronostixAuth.updatePassword()">Actualizar contraseña</button>
         <button class="btn btn-secondary w-full" onclick="PronostixAuth.logout()">Cancelar</button>
+        <div id="authFeedback" class="auth-feedback hidden" aria-live="polite"></div>
       </div>
     </section></main>`;
   }
@@ -54,12 +56,31 @@
     if (button) button.textContent = showing ? "Mostrar" : "Ocultar";
   }
 
+  function setAuthFeedback(message, ok = true) {
+    const el = document.getElementById("authFeedback");
+    if (!el) return;
+    el.textContent = message;
+    el.className = `auth-feedback ${ok ? "auth-feedback-ok" : "auth-feedback-error"}`;
+  }
+
+  function setRegisterLoading(loading) {
+    const button = document.getElementById("registerButton");
+    if (!button) return;
+    button.disabled = loading;
+    button.textContent = loading ? "Creando cuenta..." : "Crear cuenta";
+  }
+
   async function register() {
     const email = P.val("email");
     const password = P.val("password");
     const username = P.val("username");
     const displayName = P.val("display");
-    if (!email || !password || !username || !displayName) return P.toast("Completa email, username, nombre visible y contraseña.", false);
+    if (!email || !password || !username || !displayName) {
+      setAuthFeedback("Completa email, username, nombre visible y contraseña.", false);
+      return P.toast("Completa email, username, nombre visible y contraseña.", false);
+    }
+    setRegisterLoading(true);
+    setAuthFeedback("Creando cuenta...", true);
     const { error } = await P.sb.auth.signUp({
       email,
       password,
@@ -67,8 +88,11 @@
         data: { username, display_name: displayName },
         emailRedirectTo: P.siteUrl()
       }
-    });
-    P.toast(error ? error.message : "Cuenta creada. Si Supabase requiere confirmación, revisa tu email.", !error);
+    }).catch(error => ({ error }));
+    setRegisterLoading(false);
+    const message = error ? (error.message || "No se pudo crear la cuenta. Intenta de nuevo.") : "Cuenta creada. Si Supabase requiere confirmación, revisa tu email. Si no, ya puedes iniciar sesión.";
+    setAuthFeedback(message, !error);
+    P.toast(message, !error);
   }
 
   async function login() {
