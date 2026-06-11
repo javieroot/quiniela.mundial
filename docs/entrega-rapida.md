@@ -56,3 +56,28 @@ Si hubo datos de prueba:
 3. Crea/usa usuario ROOT.
 4. Revisa el panel de Administración.
 5. Ejecuta `validate_pre_production_clean.sql` antes de producción.
+
+## 6. Flujo operativo de liberación 10:00
+
+1. Abrir la app publicada y entrar como ROOT/ADMIN.
+2. En Administración revisar **Estado del sistema**:
+   - usuarios registrados y pagados esperados,
+   - usuarios dummy en 0,
+   - partidos y jugadores cargados,
+   - capturas/resultados en 0 si todavía no inicia producción.
+3. Confirmar configuración:
+   - inscripción 200 MXN,
+   - comisión admin 10% visible solo en Administración,
+   - premios visibles 1° 50%, 2° 25%, 3° 15%.
+4. Ejecutar validaciones SQL finales:
+   - `sql/validate_worldcup_2026_seed.sql`,
+   - `sql/validate_pre_production_clean.sql`.
+5. Si aparece `REVISAR`, corregir y repetir validación antes de liberar.
+
+## 7. Recuperación rápida
+
+- Si hay usuarios dummy: ejecutar `sql/cleanup_test_data.sql`.
+- Si hay capturas de usuario de prueba: ejecutar `reset_user_entries()` o usar el botón **Limpiar capturas de usuarios**.
+- Si hay resultados de prueba: ejecutar `reset_tournament_results()` o usar **Limpiar resultados del torneo**.
+- Si hay capturas y resultados de prueba: ejecutar `reset_full_test()` o usar **Reiniciar prueba completa**.
+- Si Administración muestra “No se pudo verificar”, revisar sesión ADMIN/ROOT, RLS y migración `sql/migrations/20260610_roles_and_admin_maintenance.sql`.

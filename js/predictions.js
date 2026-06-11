@@ -2,6 +2,7 @@
   const P = window.Pronostix;
   const UI = window.PronostixUI;
   const Data = window.PronostixData;
+  let visibleMatches = [];
 
   function isLocked(match) {
     return Date.now() >= new Date(match.kickoff_at).getTime() - (P.lockMinutes() * 60000);
@@ -17,13 +18,15 @@
 
   async function renderPredictions() {
     const { matches } = await Data.getTournamentData();
+    visibleMatches = matches;
     const { data: preds, error } = await P.sb.from("predictions").select("*").eq("user_id", P.state.session.user.id);
     if (error) P.toast(error.message, false);
     const byMatch = Object.fromEntries((preds || []).map(p => [p.match_id, p]));
     if (!matches.length) return UI.shell(UI.emptyState("Sin partidos", "Carga partidos desde el panel de administración o en SQL."));
     UI.shell(`<section class="card p-5">
-      <div class="section-title"><div><h2>Pronósticos por partido</h2><p>Se bloquea ${P.lockMinutes()} minuto(s) antes de cada partido. Los bloqueados siguen visibles.</p></div><span class="pill">Tus pronósticos guardados se precargan</span></div>
-      <div class="match-list">${matches.map(match => renderMatch(match, byMatch[match.id])).join("")}</div>
+      <div class="section-title"><div><h2>Pronósticos por partido</h2><p>Se bloquea ${P.lockMinutes()} minuto(s) antes de cada partido. Los bloqueados siguen visibles.</p></div><div class="admin-actions"><span class="pill">Tus pronósticos guardados se precargan</span><button class="btn btn-primary" onclick="PronostixPredictions.saveAllPredictions()">Guardar todo</button></div></div>
+      <p class="text-sm text-slate-500 mt-2">Guardar todo recorre los partidos visibles, ignora vacíos o bloqueados y guarda únicamente marcadores completos.</p>
+      <div class="match-list mt-3">${matches.map(match => renderMatch(match, byMatch[match.id])).join("")}</div>
     </section>`);
   }
 
@@ -47,18 +50,53 @@
     </article>`;
   }
 
-  async function savePrediction(matchId) {
-    const payload = {
+  function predictionPayload(matchId, updatedAt = new Date().toISOString()) {
+    return {
       user_id: P.state.session.user.id,
       match_id: matchId,
       home_score: P.num(P.val(`home-${matchId}`)),
       away_score: P.num(P.val(`away-${matchId}`)),
-      updated_at: new Date().toISOString()
+      updated_at: updatedAt
     };
+  }
+
+  function hasScoreValue(matchId, side) {
+    return P.val(`${side}-${matchId}`) !== "";
+  }
+
+  async function savePrediction(matchId) {
+    const payload = predictionPayload(matchId);
     if (payload.home_score == null || payload.away_score == null) return P.toast("Captura ambos marcadores.", false);
     const { error } = await P.sb.from("predictions").upsert(payload, { onConflict: "user_id,match_id" });
     P.toast(error ? error.message : "Pronóstico guardado.", !error);
   }
 
-  window.PronostixPredictions = { renderPredictions, savePrediction, isLocked };
+  async function saveAllPredictions() {
+    const updatedAt = new Date().toISOString();
+    const payloads = [];
+    let omitted = 0;
+
+    for (const match of visibleMatches) {
+      if (isLocked(match)) {
+        omitted += 1;
+        continue;
+      }
+
+      const hasHome = hasScoreValue(match.id, "home");
+      const hasAway = hasScoreValue(match.id, "away");
+      if (!hasHome && !hasAway) {
+        omitted += 1;
+        continue;
+      }
+      if (hasHome !== hasAway) return P.toast("Hay partidos incompletos. Captura ambos marcadores o deja ambos campos vacíos.", false);
+
+      payloads.push(predictionPayload(match.id, updatedAt));
+    }
+
+    if (!payloads.length) return P.toast(`Se guardaron 0 pronósticos. ${omitted} partidos se omitieron por estar vacíos o bloqueados.`);
+    const { error } = await P.sb.from("predictions").upsert(payloads, { onConflict: "user_id,match_id" });
+    P.toast(error ? error.message : `Se guardaron ${payloads.length} pronósticos. ${omitted} partidos se omitieron por estar vacíos o bloqueados.`, !error);
+  }
+
+  window.PronostixPredictions = { renderPredictions, savePrediction, saveAllPredictions, isLocked };
 }());

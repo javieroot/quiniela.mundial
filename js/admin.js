@@ -16,11 +16,11 @@
 
   async function renderAdmin() {
     if (!P.state.profile?.is_admin) return UI.shell(UI.emptyState("No autorizado", "El acceso de administración se controla desde la base de datos."));
-    const [{ data: users, error: usersError }, tournamentData, officialRows, maintenanceSnapshot] = await Promise.all([
+    const [{ data: users, error: usersError }, tournamentData, officialRows, systemSnapshot] = await Promise.all([
       P.sb.from("profiles").select("*").order("created_at"),
       Data.getTournamentData(),
       Rankings.calculateRows(true),
-      getMaintenanceSnapshot()
+      getSystemSnapshot()
     ]);
     if (usersError) P.toast(usersError.message, false);
     const { teams, players, matches } = tournamentData;
@@ -28,23 +28,29 @@
     if (specialError) P.toast(specialError.message, false);
     const officialPrizes = Rankings.prizePlan(officialRows, officialRows.length);
 
-    UI.shell(`${renderSettings()}
-      ${renderPrivilegeInfo()}
-      ${renderRolesMigrationInfo()}
-      ${renderAutomationSettings()}
-      ${renderPoolSummary(officialPrizes)}
-      ${renderUsers(users || [])}
-      ${renderMatchResults(matches)}
-      ${renderSpecialResults(teams, players, specialResults)}
-      ${renderMaintenance(maintenanceSnapshot)}
-      ${renderDataLoadInfo()}`);
+    UI.shell(`${renderQuickNav()}
+      ${adminDetails("estado", "Estado del sistema", renderSystemStatus(systemSnapshot), true)}
+      ${adminDetails("configuracion", "Configuración del torneo", `${renderSettings()}${renderAutomationSettings()}${renderPoolSummary(officialPrizes)}`, true)}
+      ${adminDetails("usuarios", "Usuarios, pagos y roles", `${renderUsers(users || [])}${renderPrivilegeInfo()}`, false)}
+      ${adminDetails("resultados", "Resultados de partidos", renderMatchResults(matches), false)}
+      ${adminDetails("especiales", "Resultados especiales", renderSpecialResults(teams, players, specialResults), false)}
+      ${adminDetails("mantenimiento", "Mantenimiento", renderMaintenance(systemSnapshot), false)}
+      ${adminDetails("ayuda", "Ayuda técnica y carga de datos", `${renderDataLoadInfo()}${renderRolesMigrationInfo()}`, false)}`);
+  }
+
+  function renderQuickNav() {
+    return `<section class="card p-5 admin-quick-nav"><h2 class="text-xl font-black">Administración</h2><p class="text-slate-600 mt-1">Menú rápido para operar el torneo sin buscar entre toda la información.</p><div class="admin-nav-actions mt-3"><a class="btn btn-secondary" href="#estado">Estado</a><a class="btn btn-secondary" href="#configuracion">Configuración</a><a class="btn btn-secondary" href="#usuarios">Usuarios</a><a class="btn btn-secondary" href="#resultados">Resultados</a><a class="btn btn-secondary" href="#mantenimiento">Mantenimiento</a><a class="btn btn-secondary" href="#ayuda">Ayuda</a></div></section>`;
+  }
+
+  function adminDetails(id, title, content, open = false) {
+    return `<details id="${id}" class="admin-section card" ${open ? "open" : ""}><summary>${P.esc(title)}</summary><div class="admin-section-body">${content}</div></details>`;
   }
 
   function renderSettings() {
     const s = P.state.settings || {};
-    return `<section class="card p-5"><div class="section-title"><div><h2>Panel de administración</h2><p>El permiso real viene de <code>profiles.is_admin</code>, no del frontend.</p></div></div>
+    return `<section class="admin-block"><div class="section-title"><div><h2>Configuración económica y bloqueo</h2><p>Define inscripción, comisión visible solo en Administración, premios y bloqueo de capturas.</p></div><button class="btn btn-primary" onclick="PronostixAdmin.saveSettings()">Guardar configuración</button></div>
       <div class="grid md:grid-cols-2 gap-5 mt-4">
-        <div><h3 class="font-black">Configuración económica y bloqueo</h3><p class="text-sm text-slate-500">Premios 1°+2°+3° + comisión admin deben sumar 100.</p>
+        <div><h3 class="font-black">Premios del torneo</h3><p class="text-sm text-slate-500">Configuración esperada: inscripción 200 MXN, comisión admin 10%, premios 50% / 25% / 15%. La suma total debe ser 100%.</p>
           <div class="form-grid mt-2">
             <label>Costo de inscripción<input id="entryFee" class="input" type="number" min="0" value="${s.entry_fee ?? 0}"></label>
             <label>% comisión admin<input id="adminPct" class="input" type="number" min="0" max="100" value="${s.admin_percentage ?? 0}"></label>
@@ -55,7 +61,7 @@
           </div>
           <button class="btn btn-primary mt-3" onclick="PronostixAdmin.saveSettings()">Guardar configuración</button>
         </div>
-        <div><h3 class="font-black">Torneo activo</h3>
+        <div><h3 class="font-black">Torneo activo</h3><p class="text-sm text-slate-500">Úsalo solo si necesitas cambiar qué torneo ve la aplicación.</p>
           <label>Seleccionar torneo activo<select id="activeTournament" class="input mt-2">${P.state.tournaments.map(t => `<option value="${t.id}" ${t.is_active ? "selected" : ""}>${P.esc(t.name)}</option>`).join("")}</select></label>
           <label>Nombre del torneo activo<input id="tournamentName" class="input mt-2" value="${P.esc(P.state.activeTournament?.name || "")}"></label>
           <div class="flex gap-2 mt-3"><button class="btn btn-primary" onclick="PronostixAdmin.setActiveTournament()">Activar torneo</button><button class="btn btn-secondary" onclick="PronostixAdmin.saveTournamentName()">Guardar nombre</button></div>
@@ -66,7 +72,7 @@
 
   function renderAutomationSettings() {
     const s = P.state.settings || {};
-    return `<section class="card p-5"><h3 class="text-xl font-black">Preparación para API futura</h3>
+    return `<section class="admin-block"><h3 class="text-xl font-black">Preparación para API futura</h3>
       <p class="text-slate-600 mt-1">La captura manual sigue siendo la fuente principal. La API automática NO está implementada; estos campos solo preparan una integración futura.</p>
       <div class="grid md:grid-cols-2 gap-4 mt-3">
         <label><input id="resultsApiEnabled" type="checkbox" ${s.results_api_enabled ? "checked" : ""}> Preparar API futura de resultados de partidos</label>
@@ -75,35 +81,36 @@
         <label>Proveedor/API especiales<input id="specialsApiProvider" class="input" value="${P.esc(s.special_results_api_provider || "")}" placeholder="Opcional a futuro"></label>
       </div>
       <div class="flex gap-2 mt-3"><button class="btn btn-secondary" onclick="PronostixAdmin.saveAutomationSettings()">Guardar preparación API</button><button class="btn btn-secondary" disabled>Sincronizar resultados (próximamente)</button></div>
-      <p class="text-sm text-slate-500 mt-2">Si falla este guardado, ejecuta primero la migración <code>sql/migrations/20260610_match_metadata_and_api_flags.sql</code>.</p>
+      <details class="technical-details mt-3"><summary>Ver información técnica</summary><p class="text-sm text-slate-500 mt-2">Si falla este guardado, ejecuta primero <code>sql/migrations/20260610_match_metadata_and_api_flags.sql</code>.</p></details>
     </section>`;
   }
 
   function renderPrivilegeInfo() {
-    return `<section class="card p-5"><h3 class="text-xl font-black">Control de privilegios</h3>
-      <p class="text-slate-600 mt-1">Los permisos administrativos son gestionados exclusivamente por usuarios con perfil ROOT.</p>
+    return `<section class="admin-block"><h3 class="text-xl font-black">Control de privilegios</h3>
+      <p class="text-slate-600 mt-1">ROOT puede otorgar o revocar administración. ADMIN opera pagos, configuración y resultados, pero no debe elevar privilegios.</p>
       <div class="grid md:grid-cols-2 gap-4 mt-3">
         <article class="prize-place"><h4>Un usuario ROOT puede:</h4><ul class="list-decimal ml-5 text-sm text-slate-700"><li>Otorgar permisos de administrador.</li><li>Revocar permisos de administrador.</li><li>Designar o reemplazar administradores operativos.</li></ul></article>
         <article class="prize-place"><h4>Administradores operativos</h4><p class="text-sm text-slate-700">Pueden gestionar el torneo y sus participantes, pero no pueden crear, modificar ni eliminar usuarios ROOT.</p></article>
       </div>
+      <details class="technical-details mt-3"><summary>Ver información técnica</summary><p class="text-sm text-slate-500 mt-2">Los permisos se validan en SQL con <code>profiles.role</code> y <code>auth.uid()</code>; el frontend solo muestra los controles permitidos.</p></details>
     </section>`;
   }
 
   function renderRolesMigrationInfo() {
-    return `<section class="card p-5"><h3 class="text-xl font-black">Migración de roles y mantenimiento</h3>
-      <p class="text-slate-600 mt-1"><code>sql/migrations/20260610_roles_and_admin_maintenance.sql</code> prepara la base para controlar privilegios y ejecutar limpiezas seguras desde RPC.</p>
+    return `<section class="admin-block"><h3 class="text-xl font-black">Ayuda de migraciones y mantenimiento</h3>
+      <p class="text-slate-600 mt-1">Usa esta guía cuando prepares una base existente para roles administrativos y limpiezas seguras.</p>
       <div class="grid md:grid-cols-4 gap-3 mt-3">
-        <article class="prize-place"><h4>Para qué sirve</h4><p class="text-sm">Agrega roles ROOT/ADMIN/USER y procedimientos de mantenimiento del torneo.</p></article>
+        <article class="prize-place"><h4>Para qué sirve</h4><p class="text-sm">Agrega roles ROOT/ADMIN/USER y procedimientos seguros para limpiar pruebas.</p></article>
         <article class="prize-place"><h4>Cuándo ejecutarla</h4><p class="text-sm">Después de tener la estructura base y antes de usar mantenimiento o control de roles.</p></article>
-        <article class="prize-place"><h4>Qué agrega</h4><p class="text-sm">Columna <code>profiles.role</code>, helpers de permisos, <code>set_profile_role()</code>, <code>reset_user_entries()</code>, <code>reset_tournament_results()</code> y <code>reset_full_test()</code>.</p></article>
+        <article class="prize-place"><h4>Qué agrega</h4><p class="text-sm">Roles, validaciones de permisos y tres acciones de limpieza desde Administración.</p></article>
         <article class="prize-place"><h4>Qué NO hace</h4><p class="text-sm">No crea usuarios, no carga seeds, no borra equipos, partidos, jugadores, torneo ni configuración.</p></article>
       </div>
-      <p class="text-sm text-slate-500 mt-3">Los botones de reset no son la seguridad principal: las RPC validan <code>auth.uid()</code> y rol ROOT/ADMIN dentro de SQL. Sus borrados son globales por diseño para reiniciar pruebas/resultados del torneo.</p>
+      <details class="technical-details mt-3"><summary>Ver información técnica</summary><p class="text-sm text-slate-500 mt-2">Archivo: <code>sql/migrations/20260610_roles_and_admin_maintenance.sql</code>. Funciones: <code>set_profile_role()</code>, <code>reset_user_entries()</code>, <code>reset_tournament_results()</code> y <code>reset_full_test()</code>.</p></details>
     </section>`;
   }
 
   function renderPoolSummary(prizes) {
-    return `<section class="card p-5"><h3 class="text-xl font-black">Resumen oficial de bolsa</h3>
+    return `<section class="admin-block"><h3 class="text-xl font-black">Resumen oficial de bolsa</h3>
       <p class="mt-1">Bolsa: <b>${P.money(prizes.pool)}</b> · Comisión admin: <b>${P.money(prizes.adminFee)}</b> · Bolsa neta: <b>${P.money(prizes.netPool)}</b></p>
       ${Rankings.renderPrizeSummary("Premios calculados", prizes, true)}
     </section>`;
@@ -121,19 +128,19 @@
   }
 
   function renderUsers(users) {
-    return `<section class="card p-5"><div class="section-title"><div><h3>Usuarios, pagos y roles</h3><p>ROOT puede cambiar roles; ADMIN solo opera pagos y torneo. Los cambios sensibles se validan otra vez en SQL.</p></div></div><div class="table-wrap mt-3"><table class="data-table admin-users-table"><thead><tr><th>Usuario</th><th>ID de usuario</th><th>Pago</th><th>Rol</th><th>Administrador</th><th>Acciones</th></tr></thead><tbody>
+    return `<section class="admin-block"><div class="section-title"><div><h3>Usuarios, pagos y roles</h3><p>Operación diaria: confirmar pagos y, si eres ROOT, ajustar roles.</p></div></div><div class="table-wrap mt-3"><table class="data-table admin-users-table"><thead><tr><th>Usuario</th><th>ID de usuario</th><th>Pago</th><th>Rol</th><th>Administrador</th><th>Acciones</th></tr></thead><tbody>
       ${users.map(user => `<tr><td>${UI.userChip(user, true)}</td><td><small>${P.esc(user.id)}</small></td><td><select id="pay-${user.id}" class="input"><option value="UNPAID" ${user.payment_status === "UNPAID" ? "selected" : ""}>NO PAGADO</option><option value="PAID" ${user.payment_status === "PAID" ? "selected" : ""}>PAGADO</option></select></td><td>${roleControl(user)}</td><td>${user.is_admin ? "Sí" : "No"}</td><td><div class="admin-actions"><button class="btn btn-secondary" onclick="PronostixAdmin.savePayment('${user.id}')">Guardar pago</button></div></td></tr>`).join("")}
     </tbody></table></div></section>`;
   }
 
   function renderMatchResults(matches) {
-    return `<section class="card p-5"><h3 class="text-xl font-black">Resultados de partidos</h3><p class="text-slate-600 mt-1">La captura manual es la fuente principal de resultados. La API automática queda para una fase futura.</p><div class="match-list mt-3">
+    return `<section class="admin-block"><h3 class="text-xl font-black">Resultados de partidos</h3><p class="text-slate-600 mt-1">Captura final del marcador y marca el partido como finalizado. La captura manual es la fuente principal.</p><div class="match-list mt-3">
       ${matches.map(match => `<article class="admin-result-row"><div><b>${P.esc(match.home_team?.name)} vs ${P.esc(match.away_team?.name)}</b><p class="text-sm text-slate-500">${P.esc(match.group_name || "Grupo por confirmar")} · ${P.esc(match.stadium || "Estadio por confirmar")} · ${P.esc(match.city || "Ciudad por confirmar")}</p></div><input id="resultHome-${match.id}" class="input score-input" type="number" min="0" value="${match.home_score ?? ""}"><input id="resultAway-${match.id}" class="input score-input" type="number" min="0" value="${match.away_score ?? ""}"><select id="status-${match.id}" class="input"><option value="SCHEDULED" ${match.status === "SCHEDULED" ? "selected" : ""}>Programado</option><option value="FINISHED" ${match.status === "FINISHED" ? "selected" : ""}>Finalizado</option></select><button class="btn btn-primary" onclick="PronostixAdmin.saveMatchResult('${match.id}')">Guardar resultado</button></article>`).join("")}
     </div></section>`;
   }
 
   function renderSpecialResults(teams, players, result) {
-    return `<section class="card p-5"><h3 class="text-xl font-black">Resultados especiales</h3><p class="text-slate-600 mt-1">Captura manual activa. La automatización de especiales queda preparada para después, pero no está implementada.</p><div class="grid md:grid-cols-4 gap-3 mt-3">
+    return `<section class="admin-block"><h3 class="text-xl font-black">Resultados especiales</h3><p class="text-slate-600 mt-1">Captura campeón, subcampeón, tercer lugar y goleador cuando sean oficiales. La automatización no está implementada.</p><div class="grid md:grid-cols-4 gap-3 mt-3">
       <label>Campeón<select id="srChampion" class="input">${UI.optionList(teams, result?.champion_team_id, "Pendiente")}</select></label>
       <label>Subcampeón<select id="srRunner" class="input">${UI.optionList(teams, result?.runner_up_team_id, "Pendiente")}</select></label>
       <label>Tercer lugar<select id="srThird" class="input">${UI.optionList(teams, result?.third_place_team_id, "Pendiente")}</select></label>
@@ -142,45 +149,75 @@
   }
 
   function statusCard(title, value, okText, dangerText) {
-    const ok = value !== null && Number(value || 0) === 0;
-    const copy = value === null ? "No se pudo verificar; revisa permisos/RLS." : (ok ? okText : dangerText);
-    return `<article class="maintenance-status ${ok ? "ok" : "danger"}"><span>${P.esc(title)}</span><b>${value ?? "—"}</b><small>${P.esc(copy)}</small></article>`;
+    const unknown = value === null || value === undefined;
+    const ok = !unknown && Number(value || 0) === 0;
+    const copy = unknown ? "No se pudo verificar" : (ok ? okText : dangerText);
+    return `<article class="maintenance-status ${unknown ? "unknown" : ok ? "ok" : "danger"}"><span>${P.esc(title)}</span><b>${unknown ? "—" : value}</b><small>${P.esc(copy)}</small></article>`;
+  }
+
+  function metricCard(title, value, helper = "") {
+    const unknown = value === null || value === undefined;
+    return `<article class="maintenance-status ${unknown ? "unknown" : "ok"}"><span>${P.esc(title)}</span><b>${unknown ? "—" : value}</b><small>${unknown ? "No se pudo verificar" : P.esc(helper)}</small></article>`;
   }
 
   async function countRows(tableName, applyFilters = query => query) {
     const query = applyFilters(P.sb.from(tableName).select("*", { count: "exact", head: true }));
     const { count, error } = await query;
     if (error) {
-      P.toast(error.message, false);
+      console.warn(`No se pudo verificar ${tableName}:`, error.message);
       return null;
     }
     return count || 0;
   }
 
-  async function getMaintenanceSnapshot() {
+  async function getSystemSnapshot() {
     const tid = P.state.activeTournament?.id;
-    const [predictions, specialPredictions, specialResults, finishedMatches, scoredMatches, dummyProfiles] = await Promise.all([
+    const [users, paidUsers, predictions, specialPredictions, specialResults, finishedMatches, scoredMatches, dummyProfiles, matchesLoaded, playersLoaded] = await Promise.all([
+      countRows("profiles"),
+      countRows("profiles", query => query.eq("payment_status", "PAID")),
       countRows("predictions"),
       countRows("special_predictions"),
       tid ? countRows("special_results", query => query.eq("tournament_id", tid)) : 0,
       tid ? countRows("matches", query => query.eq("tournament_id", tid).eq("status", "FINISHED")) : 0,
       tid ? countRows("matches", query => query.eq("tournament_id", tid).not("home_score", "is", null).not("away_score", "is", null)) : 0,
-      countRows("profiles", query => query.in("id", DUMMY_USER_IDS))
+      countRows("profiles", query => query.in("id", DUMMY_USER_IDS)),
+      tid ? countRows("matches", query => query.eq("tournament_id", tid)) : countRows("matches"),
+      countRows("players")
     ]);
-    const results = (specialResults || 0) + Math.max(finishedMatches || 0, scoredMatches || 0);
+    const results = (specialResults === null && finishedMatches === null && scoredMatches === null) ? null : (specialResults || 0) + Math.max(finishedMatches || 0, scoredMatches || 0);
     return {
+      users,
+      paidUsers,
+      dummyProfiles,
+      matchesLoaded,
+      playersLoaded,
       predictions,
       specialPredictions,
+      specialResults,
+      matchResults: (finishedMatches === null && scoredMatches === null) ? null : Math.max(finishedMatches || 0, scoredMatches || 0),
       results,
-      dummyProfiles,
       isClean: [predictions, specialPredictions, results, dummyProfiles].every(value => value !== null && Number(value || 0) === 0)
     };
   }
 
+  function renderSystemStatus(snapshot = {}) {
+    return `<section class="admin-block"><div class="section-title"><div><h3>Estado del sistema</h3><p>Vista rápida para confirmar si la base está lista para producción.</p></div><span class="pill ${snapshot.isClean ? "ok" : "danger"}">${snapshot.isClean ? "Sin capturas de prueba" : "Revisar antes de liberar"}</span></div>
+      <div class="maintenance-grid mt-3">
+        ${metricCard("Usuarios registrados", snapshot.users, "Total de perfiles registrados.")}
+        ${metricCard("Usuarios pagados", snapshot.paidUsers, "Participan en ranking oficial.")}
+        ${metricCard("Usuarios dummy", snapshot.dummyProfiles, "Debe ser 0 en producción.")}
+        ${metricCard("Partidos cargados", snapshot.matchesLoaded, "Calendario disponible.")}
+        ${metricCard("Jugadores cargados", snapshot.playersLoaded, "Candidatos para especiales.")}
+        ${metricCard("Pronósticos capturados", snapshot.predictions, "Capturas de partidos de usuarios.")}
+        ${metricCard("Especiales capturados", snapshot.specialPredictions, "Capturas especiales de usuarios.")}
+        ${metricCard("Resultados capturados", snapshot.results, "Partidos con marcador y resultados especiales.")}
+      </div>
+    </section>`;
+  }
+
   function renderMaintenance(snapshot = {}) {
-    return `<section class="card p-5"><div class="section-title"><div><h3>Mantenimiento del torneo</h3><p>Verificación previa y limpiezas seguras para cerrar pruebas antes de producción.</p></div><span class="pill ${snapshot.isClean ? "ok" : "danger"}">${snapshot.isClean ? "Listo para producción" : "Revisar datos"}</span></div>
-      <p class="text-slate-600 mt-1">Herramientas seguras para pruebas y operación. Requieren ejecutar la migración <code>sql/migrations/20260610_roles_and_admin_maintenance.sql</code>.</p>
-      <p class="text-sm text-slate-500 mt-2">Las limpiezas se validan en SQL con <code>auth.uid()</code> y rol ROOT/ADMIN. No dependen únicamente del botón del frontend.</p>
+    return `<section class="admin-block"><div class="section-title"><div><h3>Mantenimiento del torneo</h3><p>Verificación previa y limpiezas seguras para cerrar pruebas antes de producción.</p></div><span class="pill ${snapshot.isClean ? "ok" : "danger"}">${snapshot.isClean ? "Listo para producción" : "Revisar datos"}</span></div>
+      <p class="text-slate-600 mt-1">Cada acción pide confirmación y conserva estructura, torneo, configuración, equipos, jugadores y calendario.</p>
       <div class="maintenance-grid mt-3">
         ${statusCard("Usuarios dummy", snapshot.dummyProfiles, "Sin perfiles dummy conocidos.", "Hay perfiles dummy conocidos por borrar con cleanup_test_data.sql.")}
         ${statusCard("Pronósticos", snapshot.predictions, "Sin pronósticos cargados.", "Hay pronósticos cargados; confirma si son pruebas o producción.")}
@@ -190,37 +227,38 @@
       <div class="grid md:grid-cols-3 gap-4 mt-3">
         <article class="prize-place">
           <h4>Limpiar capturas de usuarios</h4>
-          <p class="text-sm text-slate-700">Sirve para borrar pronósticos y especiales capturados por usuarios sin tocar resultados del torneo.</p>
-          <p class="text-sm"><b>Borra SOLO:</b> predictions y special_predictions.</p>
-          <p class="text-sm"><b>Conserva:</b> special_results, resultados de partidos, usuarios/profiles, auth.users, pagos, roles, torneos, configuración, equipos, calendario y jugadores.</p>
-          <p class="text-sm"><b>Función SQL:</b> <code>reset_user_entries()</code></p>
-          <button class="btn btn-secondary mt-3" onclick="PronostixAdmin.resetUserEntries()">Limpiar capturas de usuarios</button>
+          <button class="btn btn-secondary mt-2" onclick="PronostixAdmin.resetUserEntries()">Limpiar capturas de usuarios</button>
+          <p class="text-sm text-slate-700 mt-3">Úsalo si quieres borrar pronósticos y especiales capturados por usuarios sin tocar resultados oficiales.</p>
+          <p class="text-sm"><b>Borra SOLO:</b> pronósticos de partidos y especiales de usuarios.</p>
+          <p class="text-sm"><b>Conserva:</b> resultados, usuarios, pagos, roles, torneo, settings, equipos, calendario y jugadores.</p>
+          <details class="technical-details mt-2"><summary>Detalle técnico</summary><p class="text-sm"><code>reset_user_entries()</code></p></details>
         </article>
         <article class="prize-place">
           <h4>Limpiar resultados del torneo</h4>
-          <p class="text-sm text-slate-700">Sirve para volver a capturar resultados sin borrar pronósticos ni especiales de usuarios.</p>
-          <p class="text-sm"><b>Borra/limpia SOLO:</b> special_results y resultados de partidos.</p>
-          <p class="text-sm"><b>Conserva:</b> predictions, special_predictions, usuarios/profiles, auth.users, pagos, roles, torneos, configuración, equipos, calendario y jugadores.</p>
-          <p class="text-sm"><b>Función SQL:</b> <code>reset_tournament_results()</code></p>
-          <button class="btn btn-secondary mt-3" onclick="PronostixAdmin.resetTournamentResults()">Limpiar resultados del torneo</button>
+          <button class="btn btn-secondary mt-2" onclick="PronostixAdmin.resetTournamentResults()">Limpiar resultados del torneo</button>
+          <p class="text-sm text-slate-700 mt-3">Úsalo si necesitas recapturar resultados sin borrar pronósticos ni especiales de usuarios.</p>
+          <p class="text-sm"><b>Borra/limpia SOLO:</b> resultados especiales y marcadores/estado de partidos.</p>
+          <p class="text-sm"><b>Conserva:</b> pronósticos, especiales de usuarios, usuarios, pagos, roles, torneo, settings, equipos, calendario y jugadores.</p>
+          <details class="technical-details mt-2"><summary>Detalle técnico</summary><p class="text-sm"><code>reset_tournament_results()</code></p></details>
         </article>
         <article class="prize-place">
           <h4>Reiniciar prueba completa</h4>
-          <p class="text-sm text-slate-700">Sirve para dejar la base cargada con el Mundial, pero sin capturas ni resultados de prueba.</p>
-          <p class="text-sm"><b>Borra/limpia:</b> predictions, special_predictions, special_results y resultados de partidos.</p>
-          <p class="text-sm"><b>Conserva:</b> usuarios/profiles, auth.users, pagos, roles, torneos, configuración, equipos, calendario y jugadores.</p>
-          <p class="text-sm"><b>Función SQL:</b> <code>reset_full_test()</code></p>
-          <button class="btn btn-secondary mt-3" onclick="PronostixAdmin.resetFullTest()">Reiniciar prueba completa</button>
+          <button class="btn btn-secondary mt-2" onclick="PronostixAdmin.resetFullTest()">Reiniciar prueba completa</button>
+          <p class="text-sm text-slate-700 mt-3">Úsalo antes de producción para dejar el Mundial cargado, pero sin capturas ni resultados de prueba.</p>
+          <p class="text-sm"><b>Borra/limpia:</b> pronósticos, especiales de usuarios, resultados especiales y marcadores/estado de partidos.</p>
+          <p class="text-sm"><b>Conserva:</b> admin ROOT, javieroot ADMIN, usuarios, pagos, roles, torneo, settings, equipos, calendario y jugadores.</p>
+          <details class="technical-details mt-2"><summary>Detalle técnico</summary><p class="text-sm"><code>reset_full_test()</code></p></details>
         </article>
       </div>
+      <details class="technical-details mt-3"><summary>Ver información técnica</summary><p class="text-sm text-slate-500 mt-2">Las limpiezas se validan en SQL con la sesión autenticada y rol ROOT/ADMIN. Requieren <code>sql/migrations/20260610_roles_and_admin_maintenance.sql</code>.</p></details>
     </section>`;
   }
 
   function renderDataLoadInfo() {
-    return `<section class="card p-5"><h3 class="text-xl font-black">Carga de datos base</h3>
-      <p class="text-slate-600 mt-1">El frontend no ejecuta SQL. Corre estos scripts desde Supabase SQL Editor en este orden:</p>
-      <ol class="list-decimal ml-5 mt-2 text-slate-700"><li><code>sql/seed_worldcup_2026.sql</code></li><li><code>sql/seed_worldcup_2026_players_candidates.sql</code></li><li><code>sql/validate_worldcup_2026_seed.sql</code></li></ol>
-      <div class="grid md:grid-cols-4 gap-3 mt-3"><article class="prize-place"><h4>Schema</h4><p class="text-sm">Crea estructura desde cero. Úsalo solo para bases nuevas.</p></article><article class="prize-place"><h4>Migraciones</h4><p class="text-sm">Actualizan una base existente sin recrearla.</p></article><article class="prize-place"><h4>Seeds</h4><p class="text-sm">Cargan datos iniciales o de producción.</p></article><article class="prize-place"><h4>Reset</h4><p class="text-sm">Limpia pruebas sin perder calendario.</p></article></div>
+    return `<section class="admin-block"><h3 class="text-xl font-black">Carga de datos base y liberación</h3>
+      <p class="text-slate-600 mt-1">El frontend no ejecuta SQL. Corre los scripts desde Supabase SQL Editor y valida después de cada carga.</p>
+      <ol class="list-decimal ml-5 mt-2 text-slate-700"><li><code>sql/seed_worldcup_2026.sql</code></li><li><code>sql/seed_worldcup_2026_players_candidates.sql</code></li><li><code>sql/validate_worldcup_2026_seed.sql</code></li><li><code>sql/cleanup_test_data.sql</code> si existen usuarios dummy</li><li><code>reset_full_test()</code> si necesitas borrar capturas y resultados de prueba</li><li><code>sql/validate_pre_production_clean.sql</code></li></ol>
+      <div class="grid md:grid-cols-4 gap-3 mt-3"><article class="prize-place"><h4>Schema</h4><p class="text-sm">Crea estructura desde cero. Úsalo solo para bases nuevas.</p></article><article class="prize-place"><h4>Migraciones</h4><p class="text-sm">Actualizan una base existente sin recrearla.</p></article><article class="prize-place"><h4>Seeds</h4><p class="text-sm">Cargan calendario y jugadores.</p></article><article class="prize-place"><h4>Reset</h4><p class="text-sm">Limpia pruebas sin perder calendario ni configuración.</p></article></div>
     </section>`;
   }
 
@@ -329,14 +367,19 @@
   }
 
   async function saveSpecialResults() {
-    const podium = [P.val("srChampion"), P.val("srRunner"), P.val("srThird")].filter(Boolean);
+    const champion = P.val("srChampion");
+    const runner = P.val("srRunner");
+    const third = P.val("srThird");
+    const scorer = P.val("srScorer");
+    if (!champion || !runner || !third || !scorer) return P.toast("Captura campeón, subcampeón, tercer lugar y goleador antes de guardar resultados especiales.", false);
+    const podium = [champion, runner, third];
     if (new Set(podium).size !== podium.length) return P.toast("No repitas equipos en campeón/subcampeón/tercer lugar.", false);
     const payload = {
       tournament_id: P.state.activeTournament.id,
-      champion_team_id: P.val("srChampion") || null,
-      runner_up_team_id: P.val("srRunner") || null,
-      third_place_team_id: P.val("srThird") || null,
-      top_scorer_player_id: P.val("srScorer") || null
+      champion_team_id: champion,
+      runner_up_team_id: runner,
+      third_place_team_id: third,
+      top_scorer_player_id: scorer
     };
     const { error } = await P.sb.from("special_results").upsert(payload, { onConflict: "tournament_id" });
     P.toast(error ? error.message : "Resultados especiales guardados.", !error);

@@ -14,8 +14,10 @@
     </section></main>`;
   }
 
+  const passwordField = (id, placeholder, autocomplete) => `<div class="password-field"><input id="${id}" class="input" placeholder="${placeholder}" type="password" autocomplete="${autocomplete}"><button type="button" class="password-toggle" onclick="PronostixAuth.togglePassword('${id}', this)">Mostrar</button></div>`;
+
   const loginForm = () => `<input id="email" class="input" placeholder="Correo electrónico" type="email" autocomplete="email">
-    <input id="password" class="input" placeholder="Contraseña" type="password" autocomplete="current-password">
+    ${passwordField("password", "Contraseña", "current-password")}
     <button class="btn btn-primary w-full" onclick="PronostixAuth.login()">Entrar</button>
     <button class="btn btn-secondary w-full" onclick="PronostixAuth.renderAuth('register')">Registrarme</button>
     <button class="link-btn" onclick="PronostixAuth.renderAuth('reset')">Olvidé mi contraseña</button>`;
@@ -23,7 +25,7 @@
   const registerForm = () => `<input id="email" class="input" placeholder="Correo electrónico" type="email" autocomplete="email">
     <input id="username" class="input" placeholder="Usuario único" autocomplete="username">
     <input id="display" class="input" placeholder="Nombre visible">
-    <input id="password" class="input" placeholder="Contraseña" type="password" autocomplete="new-password">
+    ${passwordField("password", "Contraseña", "new-password")}
     <button class="btn btn-primary w-full" onclick="PronostixAuth.register()">Crear cuenta</button>
     <button class="btn btn-secondary w-full" onclick="PronostixAuth.renderAuth('login')">Ya tengo cuenta</button>`;
 
@@ -36,12 +38,20 @@
       <h1 class="auth-title">Nueva contraseña</h1>
       <p class="auth-subtitle">Captura tu nueva contraseña para terminar la recuperación.</p>
       <div class="stack">
-        <input id="newPassword" class="input" placeholder="Nueva contraseña" type="password" autocomplete="new-password">
-        <input id="confirmPassword" class="input" placeholder="Confirmar contraseña" type="password" autocomplete="new-password">
+        ${passwordField("newPassword", "Nueva contraseña", "new-password")}
+        ${passwordField("confirmPassword", "Confirmar contraseña", "new-password")}
         <button class="btn btn-primary w-full" onclick="PronostixAuth.updatePassword()">Actualizar contraseña</button>
         <button class="btn btn-secondary w-full" onclick="PronostixAuth.logout()">Cancelar</button>
       </div>
     </section></main>`;
+  }
+
+  function togglePassword(id, button) {
+    const input = document.getElementById(id);
+    if (!input) return;
+    const showing = input.type === "text";
+    input.type = showing ? "password" : "text";
+    if (button) button.textContent = showing ? "Mostrar" : "Ocultar";
   }
 
   async function register() {
@@ -96,5 +106,5 @@
     window.PronostixApp.render();
   }
 
-  window.PronostixAuth = { renderAuth, renderUpdatePassword, register, login, logout, resetPassword, updatePassword };
+  window.PronostixAuth = { renderAuth, renderUpdatePassword, togglePassword, register, login, logout, resetPassword, updatePassword };
 }());
