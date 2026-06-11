@@ -148,7 +148,7 @@
   }
 
   async function countRows(tableName, applyFilters = query => query) {
-    const query = applyFilters(P.sb.from(tableName).select("id", { count: "exact", head: true }));
+    const query = applyFilters(P.sb.from(tableName).select("*", { count: "exact", head: true }));
     const { count, error } = await query;
     if (error) {
       P.toast(error.message, false);
