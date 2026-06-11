@@ -3,13 +3,24 @@
   const UI = window.PronostixUI;
   const Data = window.PronostixData;
   const Rankings = window.PronostixRankings;
+  const DUMMY_USER_IDS = [
+    "00000000-0000-0000-0000-000000000001",
+    "00000000-0000-0000-0000-000000000002",
+    "00000000-0000-0000-0000-000000000003",
+    "00000000-0000-0000-0000-000000000004",
+    "00000000-0000-0000-0000-000000000005",
+    "00000000-0000-0000-0000-000000000006"
+  ];
+
+  const isRoot = () => P.state.profile?.role === "ROOT";
 
   async function renderAdmin() {
     if (!P.state.profile?.is_admin) return UI.shell(UI.emptyState("No autorizado", "El acceso de administración se controla desde la base de datos."));
-    const [{ data: users, error: usersError }, tournamentData, officialRows] = await Promise.all([
+    const [{ data: users, error: usersError }, tournamentData, officialRows, maintenanceSnapshot] = await Promise.all([
       P.sb.from("profiles").select("*").order("created_at"),
       Data.getTournamentData(),
-      Rankings.calculateRows(true)
+      Rankings.calculateRows(true),
+      getMaintenanceSnapshot()
     ]);
     if (usersError) P.toast(usersError.message, false);
     const { teams, players, matches } = tournamentData;
@@ -25,7 +36,7 @@
       ${renderUsers(users || [])}
       ${renderMatchResults(matches)}
       ${renderSpecialResults(teams, players, specialResults)}
-      ${renderMaintenance()}
+      ${renderMaintenance(maintenanceSnapshot)}
       ${renderDataLoadInfo()}`);
   }
 
@@ -103,9 +114,15 @@
     return user.is_admin ? "ADMIN" : "USER";
   }
 
+  function roleControl(user) {
+    const currentRole = userRole(user);
+    if (!isRoot()) return `<span class="pill">${P.esc(currentRole)}</span>`;
+    return `<div class="admin-actions"><select id="role-${user.id}" class="input role-select"><option value="USER" ${currentRole === "USER" ? "selected" : ""}>USER</option><option value="ADMIN" ${currentRole === "ADMIN" ? "selected" : ""}>ADMIN</option><option value="ROOT" ${currentRole === "ROOT" ? "selected" : ""}>ROOT</option></select><button class="btn btn-secondary" onclick="PronostixAdmin.saveRole('${user.id}')">Guardar rol</button></div>`;
+  }
+
   function renderUsers(users) {
-    return `<section class="card p-5"><h3 class="text-xl font-black">Usuarios y pagos</h3><div class="table-wrap mt-3"><table class="data-table"><thead><tr><th>Usuario</th><th>ID de usuario</th><th>Pago</th><th>Rol</th><th>Administrador</th><th>Acción</th></tr></thead><tbody>
-      ${users.map(user => `<tr><td>${UI.userChip(user, true)}</td><td><small>${P.esc(user.id)}</small></td><td><select id="pay-${user.id}" class="input"><option value="UNPAID" ${user.payment_status === "UNPAID" ? "selected" : ""}>NO PAGADO</option><option value="PAID" ${user.payment_status === "PAID" ? "selected" : ""}>PAGADO</option></select></td><td><span class="pill">${P.esc(userRole(user))}</span></td><td>${user.is_admin ? "Sí" : "No"}</td><td><button class="btn btn-secondary" onclick="PronostixAdmin.savePayment('${user.id}')">Guardar</button></td></tr>`).join("")}
+    return `<section class="card p-5"><div class="section-title"><div><h3>Usuarios, pagos y roles</h3><p>ROOT puede cambiar roles; ADMIN solo opera pagos y torneo. Los cambios sensibles se validan otra vez en SQL.</p></div></div><div class="table-wrap mt-3"><table class="data-table admin-users-table"><thead><tr><th>Usuario</th><th>ID de usuario</th><th>Pago</th><th>Rol</th><th>Administrador</th><th>Acciones</th></tr></thead><tbody>
+      ${users.map(user => `<tr><td>${UI.userChip(user, true)}</td><td><small>${P.esc(user.id)}</small></td><td><select id="pay-${user.id}" class="input"><option value="UNPAID" ${user.payment_status === "UNPAID" ? "selected" : ""}>NO PAGADO</option><option value="PAID" ${user.payment_status === "PAID" ? "selected" : ""}>PAGADO</option></select></td><td>${roleControl(user)}</td><td>${user.is_admin ? "Sí" : "No"}</td><td><div class="admin-actions"><button class="btn btn-secondary" onclick="PronostixAdmin.savePayment('${user.id}')">Guardar pago</button></div></td></tr>`).join("")}
     </tbody></table></div></section>`;
   }
 
@@ -124,10 +141,51 @@
     </div><button class="btn btn-primary mt-3" onclick="PronostixAdmin.saveSpecialResults()">Guardar resultados especiales</button></section>`;
   }
 
-  function renderMaintenance() {
-    return `<section class="card p-5"><h3 class="text-xl font-black">Mantenimiento del torneo</h3>
+  function statusCard(title, value, okText, dangerText) {
+    const ok = value !== null && Number(value || 0) === 0;
+    const copy = value === null ? "No se pudo verificar; revisa permisos/RLS." : (ok ? okText : dangerText);
+    return `<article class="maintenance-status ${ok ? "ok" : "danger"}"><span>${P.esc(title)}</span><b>${value ?? "—"}</b><small>${P.esc(copy)}</small></article>`;
+  }
+
+  async function countRows(query) {
+    const { count, error } = await query.select("id", { count: "exact", head: true });
+    if (error) {
+      P.toast(error.message, false);
+      return null;
+    }
+    return count || 0;
+  }
+
+  async function getMaintenanceSnapshot() {
+    const tid = P.state.activeTournament?.id;
+    const [predictions, specialPredictions, specialResults, finishedMatches, scoredMatches, dummyProfiles] = await Promise.all([
+      countRows(P.sb.from("predictions")),
+      countRows(P.sb.from("special_predictions")),
+      tid ? countRows(P.sb.from("special_results").eq("tournament_id", tid)) : 0,
+      tid ? countRows(P.sb.from("matches").eq("tournament_id", tid).eq("status", "FINISHED")) : 0,
+      tid ? countRows(P.sb.from("matches").eq("tournament_id", tid).not("home_score", "is", null).not("away_score", "is", null)) : 0,
+      countRows(P.sb.from("profiles").in("id", DUMMY_USER_IDS))
+    ]);
+    const results = (specialResults || 0) + Math.max(finishedMatches || 0, scoredMatches || 0);
+    return {
+      predictions,
+      specialPredictions,
+      results,
+      dummyProfiles,
+      isClean: [predictions, specialPredictions, results, dummyProfiles].every(value => value !== null && Number(value || 0) === 0)
+    };
+  }
+
+  function renderMaintenance(snapshot = {}) {
+    return `<section class="card p-5"><div class="section-title"><div><h3>Mantenimiento del torneo</h3><p>Verificación previa y limpiezas seguras para cerrar pruebas antes de producción.</p></div><span class="pill ${snapshot.isClean ? "ok" : "danger"}">${snapshot.isClean ? "Listo para producción" : "Revisar datos"}</span></div>
       <p class="text-slate-600 mt-1">Herramientas seguras para pruebas y operación. Requieren ejecutar la migración <code>sql/migrations/20260610_roles_and_admin_maintenance.sql</code>.</p>
       <p class="text-sm text-slate-500 mt-2">Las limpiezas se validan en SQL con <code>auth.uid()</code> y rol ROOT/ADMIN. No dependen únicamente del botón del frontend.</p>
+      <div class="maintenance-grid mt-3">
+        ${statusCard("Usuarios dummy", snapshot.dummyProfiles, "Sin perfiles dummy conocidos.", "Hay perfiles dummy conocidos por borrar con cleanup_test_data.sql.")}
+        ${statusCard("Pronósticos", snapshot.predictions, "Sin pronósticos cargados.", "Hay pronósticos cargados; confirma si son pruebas o producción.")}
+        ${statusCard("Especiales usuarios", snapshot.specialPredictions, "Sin especiales de usuarios.", "Hay especiales de usuarios cargados; confirma si son pruebas o producción.")}
+        ${statusCard("Resultados", snapshot.results, "Sin resultados capturados.", "Hay resultados capturados; confirma si son pruebas o producción.")}
+      </div>
       <div class="grid md:grid-cols-3 gap-4 mt-3">
         <article class="prize-place">
           <h4>Limpiar capturas de usuarios</h4>
@@ -229,6 +287,17 @@
     P.toast(error ? error.message : "Pago actualizado.", !error);
   }
 
+  async function saveRole(id) {
+    if (!isRoot()) return P.toast("Solo ROOT puede modificar roles.", false);
+    const newRole = P.val(`role-${id}`);
+    if (!newRole) return P.toast("Selecciona un rol.", false);
+    if (window.prompt(`Escribe CAMBIAR ROL para asignar ${newRole}.`) !== "CAMBIAR ROL") return P.toast("Operación cancelada.", false);
+    const { error } = await P.sb.rpc("set_profile_role", { target_profile_id: id, new_role: newRole });
+    await Data.loadProfile();
+    P.toast(error ? error.message : "Rol actualizado.", !error);
+    if (!error) renderAdmin();
+  }
+
   async function saveMatchResult(id) {
     const { error } = await P.sb.from("matches").update({ home_score: P.num(P.val(`resultHome-${id}`)), away_score: P.num(P.val(`resultAway-${id}`)), status: P.val(`status-${id}`) }).eq("id", id);
     P.toast(error ? error.message : "Resultado guardado.", !error);
@@ -272,5 +341,5 @@
     P.toast(error ? error.message : "Resultados especiales guardados.", !error);
   }
 
-  window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, setActiveTournament, saveTournamentName, savePayment, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest };
+  window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest };
 }());

@@ -60,11 +60,11 @@ create index matches_tournament_kickoff_idx on public.matches(tournament_id,kick
 
 create table public.settings(
   id int primary key default 1 check(id=1),
-  entry_fee numeric(12,2) not null default 100,
+  entry_fee numeric(12,2) not null default 200,
   admin_percentage numeric(5,2) not null default 10,
   first_place_percentage numeric(5,2) not null default 50,
-  second_place_percentage numeric(5,2) not null default 30,
-  third_place_percentage numeric(5,2) not null default 20,
+  second_place_percentage numeric(5,2) not null default 25,
+  third_place_percentage numeric(5,2) not null default 15,
   lock_minutes_before_match int not null default 1,
   results_api_enabled boolean not null default false,
   results_api_provider text,
@@ -216,7 +216,7 @@ create policy "read special results" on public.special_results for select to aut
 create policy "admin special results" on public.special_results for all to authenticated using(public.is_admin()) with check(public.is_admin());
 
 insert into public.settings(id,entry_fee,admin_percentage,first_place_percentage,second_place_percentage,third_place_percentage,lock_minutes_before_match)
-values(1,100,10,50,30,20,1);
+values(1,200,10,50,25,15,1);
 
 do $$
 declare

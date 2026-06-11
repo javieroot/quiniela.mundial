@@ -91,7 +91,11 @@ Agrega:
 
 ### `cleanup_test_data.sql`
 
-Limpia usuarios/pronósticos/resultados dummy, pero conserva estructura, settings, torneo, equipos, jugadores y partidos base.
+Limpia usuarios dummy conocidos, sus pronósticos/especiales y auditoría asociada, pero conserva estructura, settings, torneo, equipos, jugadores y partidos base. Los resultados de prueba se limpian con las RPC de mantenimiento (`reset_tournament_results()` o `reset_full_test()`).
+
+### `validate_pre_production_clean.sql`
+
+Verifica antes de liberar que no queden usuarios dummy conocidos, capturas, resultados de prueba ni configuración económica distinta a 200 MXN, 10% admin y premios 50%/25%/15%.
 
 ## Operación del torneo
 
@@ -106,8 +110,8 @@ Limpia usuarios/pronósticos/resultados dummy, pero conserva estructura, setting
 
 - Ranking general: incluye todos los usuarios y simula premios como si todos hubieran pagado.
 - Ranking oficial: incluye solo usuarios con estado `PAGADO`.
-- Desempates: total, especiales, exactos, resultados acertados y última modificación más antigua.
-- Empates comparten posición y premio.
+- Desempates: puntos totales, puntos especiales y última modificación más antigua.
+- No hay desempate alfabético; los empates comparten posición densa y premio.
 
 ## Estado de API automática
 
@@ -135,7 +139,9 @@ Si ves versión vieja, cambia query strings en `index.html` y abre en incógnito
 - Verificar que `js/app.js` exponga `window.PronostixApp`.
 - Verificar que `data.js` solo consulte columnas existentes de `teams` (`id`, `name`, `code`).
 - Verificar que `matches` tenga `group_name`, `stadium`, `city`.
-- Reemplazar placeholders de `seed_base_data.sql` con datos reales confirmados.
+- Confirmar configuración: inscripción 200 MXN, admin 10%, premios 50%/25%/15% y bloqueo 1 minuto antes del partido.
+- Ejecutar `cleanup_test_data.sql` si existieron usuarios dummy conocidos.
+- Ejecutar `validate_pre_production_clean.sql` y resolver cualquier fila en `REVISAR`.
 - Probar dashboard, pronósticos, especiales, ranking general, ranking oficial y admin.
 
 ## Riesgos pendientes

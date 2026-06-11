@@ -89,6 +89,9 @@ with check (role <> 'ROOT');
 
 create or replace function public.set_profile_role(target_profile_id uuid, new_role varchar)
 returns void language plpgsql security definer set search_path = public as $$
+declare
+  current_role varchar;
+  root_count integer;
 begin
   if auth.uid() is null then
     raise exception 'No autenticado';
@@ -100,6 +103,19 @@ begin
 
   if new_role not in ('ROOT', 'ADMIN', 'USER') then
     raise exception 'Rol inválido: %', new_role;
+  end if;
+
+  select role into current_role from public.profiles where id = target_profile_id;
+
+  if current_role is null then
+    raise exception 'Usuario no encontrado';
+  end if;
+
+  if current_role = 'ROOT' and new_role <> 'ROOT' then
+    select count(*) into root_count from public.profiles where role = 'ROOT';
+    if root_count <= 1 then
+      raise exception 'No puedes quitar el último ROOT';
+    end if;
   end if;
 
   update public.profiles

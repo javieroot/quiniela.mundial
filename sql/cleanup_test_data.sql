@@ -1,5 +1,5 @@
 -- Pronostix v2 - limpieza segura de datos de prueba
--- Borra usuarios dummy, pronósticos dummy, especiales dummy, resultados dummy, pagos dummy y auditoría dummy.
+-- Borra usuarios dummy, sus pronósticos/especiales dummy, pagos asociados y auditoría dummy.
 -- Conserva estructura, settings, torneo, equipos, jugadores y partidos base.
 
 begin;
@@ -27,7 +27,7 @@ with dummy_users(id) as (
 )
 delete from public.special_predictions sp using dummy_users d where sp.user_id = d.id;
 
--- No se borran special_results de producción. Si cargaste resultados especiales dummy, bórralos manualmente después de confirmar el torneo afectado.
+-- No se borran special_results de producción. Para limpiar resultados de prueba usa reset_tournament_results() o reset_full_test() desde el panel/migración de mantenimiento.
 
 with dummy_users(id) as (
   values

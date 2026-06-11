@@ -20,3 +20,6 @@
   .hero-actions .btn{width:100%}
   .prize-place{font-size:.94rem}
 }
+/* Admin maintenance and role-management polish */
+.maintenance-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.maintenance-status{border:1px solid var(--line);border-radius:18px;padding:14px;background:#f8fafc}.maintenance-status span{display:block;color:#475569;font-weight:900;font-size:.82rem;text-transform:uppercase;letter-spacing:.04em}.maintenance-status b{display:block;font-size:1.65rem;font-weight:950;margin:.15rem 0}.maintenance-status small{display:block;color:#475569;font-weight:750}.maintenance-status.ok{background:#f0fdf4;border-color:#bbf7d0}.maintenance-status.ok b{color:#15803d}.maintenance-status.danger{background:#fff7ed;border-color:#fed7aa}.maintenance-status.danger b{color:#c2410c}.admin-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.role-select{min-width:112px}.admin-users-table .input{min-width:120px}
+@media (max-width:760px){.admin-actions{align-items:stretch;flex-direction:column}.admin-actions .btn,.role-select{width:100%}}

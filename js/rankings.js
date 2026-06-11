@@ -36,8 +36,6 @@
   function compareNoAlpha(a, b) {
     return (b.total_points - a.total_points)
       || (b.special_points - a.special_points)
-      || (b.exacts - a.exacts)
-      || (b.results - a.results)
       || (new Date(a.last_modified) - new Date(b.last_modified));
   }
 

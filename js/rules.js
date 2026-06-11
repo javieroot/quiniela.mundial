@@ -11,7 +11,7 @@
         <article><h3>Bloqueo de pronósticos</h3><p>Cada partido se bloquea <b>${P.lockMinutes()} minuto(s)</b> antes de iniciar. Después del bloqueo no se puede modificar.</p></article>
         <article><h3>Bloqueo de especiales</h3><p>Los especiales se bloquean al iniciar el torneo. Los especiales bloqueados siguen visibles.</p></article>
         <article><h3>Ranking general y oficial</h3><p>El general incluye a todos los registrados y simula premios como si todos hubieran pagado. El oficial incluye solo usuarios con estado <b>PAGADO</b> y define premios reales.</p></article>
-        <article><h3>Desempates</h3><p>Orden: puntos totales, puntos especiales, marcadores exactos, resultados acertados y última modificación más antigua. No se usa orden alfabético.</p></article>
+        <article><h3>Desempates</h3><p>Orden: puntos totales, puntos especiales y última modificación más antigua. No se usa orden alfabético.</p></article>
       </div>
     </section>
     <section class="card p-5"><h2 class="text-2xl font-black">FAQ</h2>

@@ -16,7 +16,7 @@ insert into public.settings(
   results_api_enabled,
   special_results_api_enabled
 )
-values (1, 100, 10, 50, 30, 20, 1, false, false)
+values (1, 200, 10, 50, 25, 15, 1, false, false)
 on conflict (id) do update set
   entry_fee = excluded.entry_fee,
   admin_percentage = excluded.admin_percentage,
