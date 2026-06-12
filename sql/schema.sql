@@ -71,6 +71,7 @@ create table public.settings(
   results_api_base_url text,
   special_results_api_enabled boolean not null default false,
   special_results_api_provider text,
+  specials_force_unlock boolean not null default false,
   updated_at timestamptz not null default now(),
   check(admin_percentage between 0 and 100),
   check(admin_percentage + first_place_percentage + second_place_percentage + third_place_percentage = 100)

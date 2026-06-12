@@ -13,6 +13,72 @@
   ];
 
   const isRoot = () => P.state.profile?.role === "ROOT";
+  const ELIMINATION_ORDER = ["Dieciseisavos", "Octavos", "Cuartos", "Semifinales", "Tercer Lugar", "Final"];
+
+  function progressPercent(done, total) {
+    return total ? Math.round((done / total) * 100) : 0;
+  }
+
+  function normalizeStageName(value) {
+    const text = String(value || "").trim();
+    return text || "Sin grupo/fase";
+  }
+
+  function isGroupStageName(name) {
+    return /^grupo\s+/i.test(name) || /^[a-z0-9]$/i.test(name);
+  }
+
+  function displayStageName(name) {
+    if (/^grupo\s+/i.test(name)) return name.replace(/^grupo\s+/i, "Grupo ");
+    if (/^[a-z0-9]$/i.test(name)) return `Grupo ${name.toUpperCase()}`;
+    return name;
+  }
+
+  function stageSortValue(stage) {
+    if (stage.type === "group") return `0-${stage.label}`;
+    const order = ELIMINATION_ORDER.findIndex(label => label.toLowerCase() === stage.label.toLowerCase());
+    return `1-${order === -1 ? 99 : order}-${stage.label}`;
+  }
+
+  function storageKey(area, key) {
+    return `pronostix:${P.state.activeTournament?.id || "global"}:${area}:${key}`;
+  }
+
+  function sectionOpen(area, key, fallback = true) {
+    const value = window.localStorage?.getItem(storageKey(area, key));
+    if (value == null) return fallback;
+    return value === "open";
+  }
+
+  function saveCollapseState(details) {
+    if (!details?.dataset?.collapseKey) return;
+    window.localStorage?.setItem(details.dataset.collapseKey, details.open ? "open" : "closed");
+  }
+
+  function groupMatches(matches, metricFn = () => false) {
+    const groups = new Map();
+    matches.forEach(match => {
+      const rawName = normalizeStageName(match.group_name);
+      const type = isGroupStageName(rawName) ? "group" : "round";
+      const label = displayStageName(rawName);
+      const key = `${type}:${label}`;
+      if (!groups.has(key)) groups.set(key, { key, type, label, matches: [], completed: 0 });
+      const group = groups.get(key);
+      group.matches.push(match);
+      if (metricFn(match)) group.completed += 1;
+    });
+    return [...groups.values()].sort((a, b) => stageSortValue(a).localeCompare(stageSortValue(b), "es", { numeric: true }));
+  }
+
+  function renderProgressSummary(title, done, total, extra = []) {
+    const percent = progressPercent(done, total);
+    return `<section class="progress-summary mt-3" aria-label="${P.esc(title)}">
+      <div><span>${P.esc(title)}:</span><b>${done} / ${total}</b></div>
+      ${extra.map(item => `<div><span>${P.esc(item.label)}:</span><b>${P.esc(item.value)}</b></div>`).join("")}
+      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><span style="width:${percent}%"></span></div>
+      <strong>${percent}%</strong>
+    </section>`;
+  }
 
   async function renderAdmin() {
     if (!P.state.profile?.is_admin) return UI.shell(UI.emptyState("No autorizado", "El acceso de administración se controla desde la base de datos."));
@@ -39,7 +105,7 @@
   }
 
   function renderQuickNav() {
-    return `<section class="card p-5 admin-quick-nav"><h2 class="text-xl font-black">Administración</h2><p class="text-slate-600 mt-1">Menú rápido para operar el torneo sin buscar entre toda la información.</p><div class="admin-nav-actions mt-3"><a class="btn btn-secondary" href="#estado">Estado</a><a class="btn btn-secondary" href="#configuracion">Configuración</a><a class="btn btn-secondary" href="#usuarios">Usuarios</a><a class="btn btn-secondary" href="#resultados">Resultados</a><a class="btn btn-secondary" href="#mantenimiento">Mantenimiento</a><a class="btn btn-secondary" href="#ayuda">Ayuda</a></div></section>`;
+    return `<section class="card p-5 admin-quick-nav"><h2 class="text-xl font-black">Administración</h2><p class="text-slate-600 mt-1">Menú rápido para operar el torneo sin buscar entre toda la información.</p><div class="admin-nav-actions mt-3"><a class="btn btn-secondary" href="#estado">Estado</a><a class="btn btn-secondary" href="#configuracion">Configuración</a><a class="btn btn-secondary" href="#usuarios">Usuarios</a><a class="btn btn-secondary" href="#resultados">Resultados</a><a class="btn btn-secondary" href="#especiales">Especiales</a><a class="btn btn-secondary" href="#mantenimiento">Mantenimiento</a><a class="btn btn-secondary" href="#ayuda">Ayuda</a></div></section>`;
   }
 
   function adminDetails(id, title, content, open = false) {
@@ -59,6 +125,7 @@
             <label>% 3° lugar<input id="thirdPct" class="input" type="number" min="0" max="100" value="${s.third_place_percentage ?? 0}"></label>
             <label>Minutos de bloqueo<input id="lockMinutes" class="input" type="number" min="0" value="${s.lock_minutes_before_match ?? 1}"></label>
           </div>
+          <label class="setting-check mt-3"><input id="specialsForceUnlock" type="checkbox" ${s.specials_force_unlock ? "checked" : ""}> <span><b>Desbloqueo manual de especiales</b><small>Permite editar especiales aunque el torneo ya haya iniciado. Utilizar únicamente en situaciones excepcionales.</small></span></label>
           <button class="btn btn-primary mt-3" onclick="PronostixAdmin.saveSettings()">Guardar configuración</button>
         </div>
         <div><h3 class="font-black">Torneo activo</h3><p class="text-sm text-slate-500">Úsalo solo si necesitas cambiar qué torneo ve la aplicación.</p>
@@ -133,10 +200,38 @@
     </tbody></table></div></section>`;
   }
 
+  function hasMatchScore(match) {
+    return match.home_score != null && match.away_score != null;
+  }
+
+  function renderResultRow(match) {
+    return `<article class="admin-result-row"><div><b>${P.esc(match.home_team?.name)} vs ${P.esc(match.away_team?.name)}</b><p class="text-sm text-slate-500">${P.esc(match.group_name || "Fase por confirmar")} · ${P.esc(match.stadium || "Estadio por confirmar")} · ${P.esc(match.city || "Ciudad por confirmar")}</p></div><input id="resultHome-${match.id}" class="input score-input" type="number" min="0" value="${match.home_score ?? ""}"><input id="resultAway-${match.id}" class="input score-input" type="number" min="0" value="${match.away_score ?? ""}"><select id="status-${match.id}" class="input"><option value="SCHEDULED" ${match.status === "SCHEDULED" ? "selected" : ""}>Programado</option><option value="FINISHED" ${match.status === "FINISHED" ? "selected" : ""}>Finalizado</option></select><button class="btn btn-primary" onclick="PronostixAdmin.saveMatchResult('${match.id}')">Guardar resultado</button></article>`;
+  }
+
+  function renderResultGroup(group) {
+    const key = storageKey("admin-results", group.key);
+    const percent = progressPercent(group.completed, group.matches.length);
+    return `<details class="match-group" data-collapse-key="${P.esc(key)}" ${sectionOpen("admin-results", group.key) ? "open" : ""} ontoggle="PronostixAdmin.saveCollapseState(this)">
+      <summary><span>${P.esc(group.label)} <small>(${group.completed}/${group.matches.length} con resultado)</small></span><span class="group-progress">${percent}%</span></summary>
+      <div class="match-list match-group-body">${group.matches.map(renderResultRow).join("")}</div>
+    </details>`;
+  }
+
+  function renderResultGroups(groups) {
+    const groupStage = groups.filter(group => group.type === "group");
+    const rounds = groups.filter(group => group.type !== "group");
+    return `${groupStage.length ? `<h3 class="group-section-heading">Fase de grupos</h3>${groupStage.map(renderResultGroup).join("")}` : ""}
+      ${rounds.length ? `<h3 class="group-section-heading">Eliminatorias / fases</h3>${rounds.map(renderResultGroup).join("")}` : ""}`;
+  }
+
   function renderMatchResults(matches) {
-    return `<section class="admin-block"><h3 class="text-xl font-black">Resultados de partidos</h3><p class="text-slate-600 mt-1">Captura final del marcador y marca el partido como finalizado. La captura manual es la fuente principal.</p><div class="match-list mt-3">
-      ${matches.map(match => `<article class="admin-result-row"><div><b>${P.esc(match.home_team?.name)} vs ${P.esc(match.away_team?.name)}</b><p class="text-sm text-slate-500">${P.esc(match.group_name || "Grupo por confirmar")} · ${P.esc(match.stadium || "Estadio por confirmar")} · ${P.esc(match.city || "Ciudad por confirmar")}</p></div><input id="resultHome-${match.id}" class="input score-input" type="number" min="0" value="${match.home_score ?? ""}"><input id="resultAway-${match.id}" class="input score-input" type="number" min="0" value="${match.away_score ?? ""}"><select id="status-${match.id}" class="input"><option value="SCHEDULED" ${match.status === "SCHEDULED" ? "selected" : ""}>Programado</option><option value="FINISHED" ${match.status === "FINISHED" ? "selected" : ""}>Finalizado</option></select><button class="btn btn-primary" onclick="PronostixAdmin.saveMatchResult('${match.id}')">Guardar resultado</button></article>`).join("")}
-    </div></section>`;
+    const captured = matches.filter(hasMatchScore).length;
+    const finished = matches.filter(match => match.status === "FINISHED").length;
+    const pending = Math.max(0, matches.length - finished);
+    const groups = groupMatches(matches, hasMatchScore);
+    return `<section class="admin-block"><h3 class="text-xl font-black">Resultados de partidos</h3><p class="text-slate-600 mt-1">Captura final del marcador y marca el partido como finalizado. La captura manual es la fuente principal.</p>
+      ${renderProgressSummary("Resultados capturados", captured, matches.length, [{ label: "Partidos finalizados", value: finished }, { label: "Partidos pendientes", value: pending }])}
+      <div class="match-groups mt-3">${renderResultGroups(groups)}</div></section>`;
   }
 
   function renderSpecialResults(teams, players, result) {
@@ -278,13 +373,14 @@
       first_place_percentage: P.num(P.val("firstPct"), 0),
       second_place_percentage: P.num(P.val("secondPct"), 0),
       third_place_percentage: P.num(P.val("thirdPct"), 0),
-      lock_minutes_before_match: P.num(P.val("lockMinutes"), 1)
+      lock_minutes_before_match: P.num(P.val("lockMinutes"), 1),
+      specials_force_unlock: document.getElementById("specialsForceUnlock")?.checked || false
     };
     const validation = validateSettings(payload);
     if (validation) return P.toast(validation, false);
     const { error } = await P.sb.from("settings").upsert(payload);
     await Data.loadBase();
-    P.toast(error ? error.message : "Configuración guardada.", !error);
+    P.toast(error ? `${error.message}. Si falta columna de desbloqueo, ejecuta la migración de especiales.` : "Configuración guardada.", !error);
     if (!error) renderAdmin();
   }
 
@@ -385,5 +481,5 @@
     P.toast(error ? error.message : "Resultados especiales guardados.", !error);
   }
 
-  window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest };
+  window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest, saveCollapseState };
 }());
