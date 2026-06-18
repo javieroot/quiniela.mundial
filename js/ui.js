@@ -74,12 +74,35 @@
     return `<option value="">${P.esc(label)}</option>${items.map(item => `<option value="${item.id}" ${item.id === selected ? "selected" : ""}>${P.esc(item.name)}</option>`).join("")}`;
   }
 
+  function autocompleteField({ id, label, items, selected, placeholder = "Busca y selecciona", labelFn = item => item.name, disabled = false, help = "Escribe para buscar y selecciona una opción de la lista." }) {
+    const listId = `${id}-options`;
+    const selectedItem = items.find(item => item.id === selected);
+    const selectedLabel = selectedItem ? labelFn(selectedItem) : "";
+    return `<label class="autocomplete-field">${P.esc(label)}
+      <input id="${id}Search" class="input autocomplete-input" list="${listId}" value="${P.esc(selectedLabel)}" placeholder="${P.esc(placeholder)}" data-autocomplete-target="${id}" data-autocomplete-list="${listId}" oninput="PronostixUI.syncAutocomplete(this)" onchange="PronostixUI.syncAutocomplete(this)" ${disabled ? "disabled" : ""}>
+      <input id="${id}" type="hidden" value="${P.esc(selected || "")}">
+      <datalist id="${listId}">${items.map(item => `<option value="${P.esc(labelFn(item))}" data-id="${P.esc(item.id)}"></option>`).join("")}</datalist>
+      <small class="autocomplete-help">${P.esc(help)}</small>
+    </label>`;
+  }
+
+  function syncAutocomplete(input) {
+    const target = document.getElementById(input?.dataset?.autocompleteTarget || "");
+    const list = document.getElementById(input?.dataset?.autocompleteList || "");
+    if (!target || !list) return;
+    const value = String(input.value || "").trim().toLowerCase();
+    const option = [...list.options].find(item => String(item.value || "").trim().toLowerCase() === value);
+    target.value = option?.dataset?.id || "";
+  }
+
   window.PronostixUI = {
     shell,
     loading,
     configMissing,
     emptyState,
     optionList,
+    autocompleteField,
+    syncAutocomplete,
     badge,
     userChip
   };

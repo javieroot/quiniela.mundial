@@ -70,6 +70,15 @@
     return [...groups.values()].sort((a, b) => stageSortValue(a).localeCompare(stageSortValue(b), "es", { numeric: true }));
   }
 
+  function playerLabel(player, teamsById) {
+    const teamName = teamsById[player.team_id]?.name;
+    return teamName ? `${player.name} — ${teamName}` : player.name;
+  }
+
+  function hasId(items, id) {
+    return items.some(item => item.id === id);
+  }
+
   function renderProgressSummary(title, done, total, extra = []) {
     const percent = progressPercent(done, total);
     return `<section class="progress-summary mt-3" aria-label="${P.esc(title)}">
@@ -235,11 +244,12 @@
   }
 
   function renderSpecialResults(teams, players, result) {
+    const teamsById = Object.fromEntries(teams.map(team => [team.id, team]));
     return `<section class="admin-block"><h3 class="text-xl font-black">Resultados especiales</h3><p class="text-slate-600 mt-1">Captura campeón, subcampeón, tercer lugar y goleador cuando sean oficiales. La automatización no está implementada.</p><div class="grid md:grid-cols-4 gap-3 mt-3">
-      <label>Campeón<select id="srChampion" class="input">${UI.optionList(teams, result?.champion_team_id, "Pendiente")}</select></label>
-      <label>Subcampeón<select id="srRunner" class="input">${UI.optionList(teams, result?.runner_up_team_id, "Pendiente")}</select></label>
-      <label>Tercer lugar<select id="srThird" class="input">${UI.optionList(teams, result?.third_place_team_id, "Pendiente")}</select></label>
-      <label>Goleador<select id="srScorer" class="input">${UI.optionList(players, result?.top_scorer_player_id, "Pendiente")}</select></label>
+      ${UI.autocompleteField({ id: "srChampion", label: "Campeón", items: teams, selected: result?.champion_team_id, placeholder: "Ej. México", help: "Busca y selecciona el equipo oficial." })}
+      ${UI.autocompleteField({ id: "srRunner", label: "Subcampeón", items: teams, selected: result?.runner_up_team_id, placeholder: "Ej. Francia", help: "Busca y selecciona el equipo oficial." })}
+      ${UI.autocompleteField({ id: "srThird", label: "Tercer lugar", items: teams, selected: result?.third_place_team_id, placeholder: "Ej. Inglaterra", help: "Busca y selecciona el equipo oficial." })}
+      ${UI.autocompleteField({ id: "srScorer", label: "Goleador", items: players, selected: result?.top_scorer_player_id, placeholder: "Ej. Mbappé, Kane, Haaland", labelFn: player => playerLabel(player, teamsById), help: "Selecciona un jugador existente con su país." })}
     </div><button class="btn btn-primary mt-3" onclick="PronostixAdmin.saveSpecialResults()">Guardar resultados especiales</button></section>`;
   }
 
@@ -463,11 +473,13 @@
   }
 
   async function saveSpecialResults() {
+    const { teams, players } = await Data.getTournamentData();
     const champion = P.val("srChampion");
     const runner = P.val("srRunner");
     const third = P.val("srThird");
     const scorer = P.val("srScorer");
-    if (!champion || !runner || !third || !scorer) return P.toast("Captura campeón, subcampeón, tercer lugar y goleador antes de guardar resultados especiales.", false);
+    if (!champion || !runner || !third || !scorer) return P.toast("Selecciona campeón, subcampeón, tercer lugar y goleador desde la lista antes de guardar resultados especiales.", false);
+    if (![champion, runner, third].every(id => hasId(teams, id)) || !hasId(players, scorer)) return P.toast("Selecciona únicamente equipos y goleadores existentes de la lista.", false);
     const podium = [champion, runner, third];
     if (new Set(podium).size !== podium.length) return P.toast("No repitas equipos en campeón/subcampeón/tercer lugar.", false);
     const payload = {
