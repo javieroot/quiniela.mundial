@@ -442,7 +442,7 @@
     };
     const validation = validateSettings(payload);
     if (validation) return P.toast(validation, false);
-    const { error } = await P.sb.from("settings").upsert(payload);
+    const { error } = await P.sb.from("settings").update(payload).eq("id", 1);	  
     await Data.loadBase();
     P.toast(error ? `${error.message}. Si falta columna de desbloqueo, ejecuta la migración de especiales.` : "Configuración guardada.", !error);
     if (!error) renderAdmin();
