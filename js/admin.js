@@ -450,19 +450,26 @@
 
   async function saveAutomationSettings() {
     const payload = {
-      id: 1,
+      entry_fee: P.num(P.val("entryFee"), 0),
+      admin_percentage: P.num(P.val("adminPct"), 0),
+      first_place_percentage: P.num(P.val("firstPct"), 0),
+      second_place_percentage: P.num(P.val("secondPct"), 0),
+      third_place_percentage: P.num(P.val("thirdPct"), 0),
+      lock_minutes_before_match: P.num(P.val("lockMinutes"), 1),
+      specials_force_unlock: document.getElementById("specialsForceUnlock")?.checked || false,
       results_api_enabled: document.getElementById("resultsApiEnabled")?.checked || false,
       results_api_provider: P.val("resultsApiProvider") || null,
       results_api_base_url: P.val("resultsApiBaseUrl") || null,
       special_results_api_enabled: document.getElementById("specialsApiEnabled")?.checked || false,
       special_results_api_provider: P.val("specialsApiProvider") || null
     };
-    const { error } = await P.sb.from("settings").upsert(payload);
+    const validation = validateSettings(payload);
+    if (validation) return P.toast(validation, false);
+    const { error } = await P.sb.from("settings").update(payload).eq("id", 1);
     await Data.loadBase();
     P.toast(error ? `${error.message}. Si falta columna, ejecuta la migración de API.` : "Preparación API guardada.", !error);
     if (!error) renderAdmin();
   }
-
 
   function pickDefined(...values) {
     return values.find(value => value !== undefined && value !== null && value !== "");
