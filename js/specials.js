@@ -32,6 +32,8 @@
         ${UI.autocompleteField({ id: "runner", label: "Subcampeón", items: teams, selected: sp?.runner_up_team_id, placeholder: "Ej. Francia", disabled: locked })}
         ${UI.autocompleteField({ id: "third", label: "Tercer lugar", items: teams, selected: sp?.third_place_team_id, placeholder: "Ej. Inglaterra", disabled: locked })}
         ${UI.autocompleteField({ id: "scorer", label: "Máximo goleador", items: players, selected: sp?.top_scorer_player_id, placeholder: "Ej. Mbappé, Kane, Haaland", labelFn: player => playerLabel(player, teamsById), disabled: locked, help: "Escribe el jugador y selecciona una opción con país." })}
+        ${UI.autocompleteField({ id: "bestPlayer", label: "Mejor jugador", items: players, selected: sp?.best_player_id, placeholder: "Ej. Mbappé, Bellingham, Messi", labelFn: player => playerLabel(player, teamsById), disabled: locked, help: "Especial temporal: selecciona un jugador existente con país." })}
+        ${UI.autocompleteField({ id: "bestGoalkeeper", label: "Mejor portero", items: players, selected: sp?.best_goalkeeper_id, placeholder: "Ej. Courtois, Martínez, Neuer", labelFn: player => playerLabel(player, teamsById), disabled: locked, help: "Especial temporal: selecciona un portero existente con país." })}
       </div>
       <button class="btn btn-primary mt-4" onclick="PronostixSpecials.saveSpecials()" ${locked ? "disabled" : ""}>Guardar especiales</button>
     </section>`);
@@ -48,8 +50,10 @@
     const runner = P.val("runner");
     const third = P.val("third");
     const scorer = P.val("scorer");
-    if (!champion || !runner || !third || !scorer) return P.toast("Selecciona campeón, subcampeón, tercer lugar y máximo goleador desde la lista antes de guardar.", false);
-    if (![champion, runner, third].every(id => hasId(teams, id)) || !hasId(players, scorer)) return P.toast("Selecciona únicamente equipos y goleadores existentes de la lista.", false);
+    const bestPlayer = P.val("bestPlayer");
+    const bestGoalkeeper = P.val("bestGoalkeeper");
+    if (!champion || !runner || !third || !scorer || !bestPlayer || !bestGoalkeeper) return P.toast("Selecciona campeón, subcampeón, tercer lugar, máximo goleador, mejor jugador y mejor portero desde la lista antes de guardar.", false);
+    if (![champion, runner, third].every(id => hasId(teams, id)) || ![scorer, bestPlayer, bestGoalkeeper].every(id => hasId(players, id))) return P.toast("Selecciona únicamente equipos y jugadores existentes de la lista.", false);
     const podium = [champion, runner, third];
     if (new Set(podium).size !== podium.length) return P.toast("No puedes repetir equipo entre campeón, subcampeón y tercer lugar.", false);
     const payload = {
@@ -59,6 +63,8 @@
       runner_up_team_id: runner,
       third_place_team_id: third,
       top_scorer_player_id: scorer,
+      best_player_id: bestPlayer,
+      best_goalkeeper_id: bestGoalkeeper,
       updated_at: new Date().toISOString()
     };
     const { error } = await P.sb.from("special_predictions").upsert(payload, { onConflict: "user_id,tournament_id" });

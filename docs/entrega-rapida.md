@@ -28,7 +28,7 @@ Ejecuta en Supabase SQL Editor en este orden:
 
 Si hubo datos de prueba:
 
-1. Ejecuta `sql/cleanup_test_data.sql` para quitar usuarios dummy conocidos.
+1. Ejecuta `sql/cleanup_test_data.sql` para quitar usuarios de prueba conocidos.
 2. Entra como ADMIN/ROOT al panel y usa Mantenimiento:
    - Limpiar capturas de usuarios.
    - Limpiar resultados del torneo.
@@ -62,7 +62,7 @@ Si hubo datos de prueba:
 1. Abrir la app publicada y entrar como ROOT/ADMIN.
 2. En Administración revisar **Estado del sistema**:
    - usuarios registrados y pagados esperados,
-   - usuarios dummy en 0,
+   - usuarios de prueba en 0,
    - partidos y jugadores cargados,
    - capturas/resultados en 0 si todavía no inicia producción.
 3. Confirmar configuración:
@@ -76,7 +76,7 @@ Si hubo datos de prueba:
 
 ## 7. Recuperación rápida
 
-- Si hay usuarios dummy: ejecutar `sql/cleanup_test_data.sql`.
+- Si hay usuarios de prueba: ejecutar `sql/cleanup_test_data.sql`.
 - Si hay capturas de usuario de prueba: ejecutar `reset_user_entries()` o usar el botón **Limpiar capturas de usuarios**.
 - Si hay resultados de prueba: ejecutar `reset_tournament_results()` o usar **Limpiar resultados del torneo**.
 - Si hay capturas y resultados de prueba: ejecutar `reset_full_test()` o usar **Reiniciar prueba completa**.

@@ -12,6 +12,57 @@
     "00000000-0000-0000-0000-000000000006"
   ];
 
+  const THE_SPORTS_DB_FREE_KEY = "3";
+  const TEAM_ALIASES = {
+    "alemania": ["germany"],
+    "arabia saudita": ["saudi arabia"],
+    "argelia": ["algeria"],
+    "australia": ["australia"],
+    "belgica": ["belgium"],
+    "brasil": ["brazil"],
+    "canada": ["canada"],
+    "chile": ["chile"],
+    "china": ["china"],
+    "colombia": ["colombia"],
+    "corea del sur": ["south korea", "korea republic", "republic of korea"],
+    "costa de marfil": ["ivory coast", "cote divoire", "côte d’ivoire", "côte d'ivoire"],
+    "costa rica": ["costa rica"],
+    "croacia": ["croatia"],
+    "dinamarca": ["denmark"],
+    "ecuador": ["ecuador"],
+    "egipto": ["egypt"],
+    "escocia": ["scotland"],
+    "espana": ["spain"],
+    "estados unidos": ["united states", "usa", "united states of america"],
+    "francia": ["france"],
+    "gales": ["wales"],
+    "ghana": ["ghana"],
+    "inglaterra": ["england"],
+    "iran": ["iran"],
+    "islandia": ["iceland"],
+    "italia": ["italy"],
+    "japon": ["japan"],
+    "marruecos": ["morocco"],
+    "mexico": ["mexico"],
+    "noruega": ["norway"],
+    "nueva zelanda": ["new zealand"],
+    "paises bajos": ["netherlands", "holland"],
+    "panama": ["panama"],
+    "paraguay": ["paraguay"],
+    "peru": ["peru"],
+    "polonia": ["poland"],
+    "portugal": ["portugal"],
+    "qatar": ["qatar"],
+    "republica checa": ["czech republic", "czechia"],
+    "senegal": ["senegal"],
+    "serbia": ["serbia"],
+    "suecia": ["sweden"],
+    "suiza": ["switzerland"],
+    "tunez": ["tunisia"],
+    "turquia": ["turkey", "turkiye", "türkiye"],
+    "uruguay": ["uruguay"]
+  };
+
   const isRoot = () => P.state.profile?.role === "ROOT";
   const ELIMINATION_ORDER = ["Dieciseisavos", "Octavos", "Cuartos", "Semifinales", "Tercer Lugar", "Final"];
 
@@ -148,16 +199,17 @@
 
   function renderAutomationSettings() {
     const s = P.state.settings || {};
-    return `<section class="admin-block"><h3 class="text-xl font-black">Preparación para API futura</h3>
-      <p class="text-slate-600 mt-1">La captura manual sigue siendo la fuente principal. La API automática NO está implementada; estos campos solo preparan una integración futura.</p>
+    return `<section class="admin-block"><h3 class="text-xl font-black">Sincronización de resultados desde proveedor</h3>
+      <p class="text-slate-600 mt-1">Usa un proveedor real para evitar capturar marcadores a mano. La captura manual sigue disponible como respaldo si el proveedor no trae un partido.</p>
       <div class="grid md:grid-cols-2 gap-4 mt-3">
-        <label><input id="resultsApiEnabled" type="checkbox" ${s.results_api_enabled ? "checked" : ""}> Preparar API futura de resultados de partidos</label>
-        <label>Proveedor/API partidos<input id="resultsApiProvider" class="input" value="${P.esc(s.results_api_provider || "")}" placeholder="Ej. football-data, API-Football"></label>
-        <label><input id="specialsApiEnabled" type="checkbox" ${s.special_results_api_enabled ? "checked" : ""}> Preparar automatización de especiales</label>
+        <label><input id="resultsApiEnabled" type="checkbox" ${s.results_api_enabled ? "checked" : ""}> Habilitar sincronización de resultados de partidos</label>
+        <label>Proveedor/API partidos<input id="resultsApiProvider" class="input" value="${P.esc(s.results_api_provider || "thesportsdb")}" placeholder="thesportsdb"></label>
+        <label class="md:col-span-2">Liga/endpoint del proveedor<input id="resultsApiBaseUrl" class="input" value="${P.esc(s.results_api_base_url || "")}" placeholder="TheSportsDB idLeague, ej. 4821, o URL JSON avanzada"></label>
+        <label><input id="specialsApiEnabled" type="checkbox" ${s.special_results_api_enabled ? "checked" : ""}> Registrar proveedor externo para especiales</label>
         <label>Proveedor/API especiales<input id="specialsApiProvider" class="input" value="${P.esc(s.special_results_api_provider || "")}" placeholder="Opcional a futuro"></label>
       </div>
-      <div class="flex gap-2 mt-3"><button class="btn btn-secondary" onclick="PronostixAdmin.saveAutomationSettings()">Guardar preparación API</button><button class="btn btn-secondary" disabled>Sincronizar resultados (próximamente)</button></div>
-      <details class="technical-details mt-3"><summary>Ver información técnica</summary><p class="text-sm text-slate-500 mt-2">Si falla este guardado, ejecuta primero <code>sql/migrations/20260610_match_metadata_and_api_flags.sql</code>.</p></details>
+      <div class="flex gap-2 mt-3"><button class="btn btn-secondary" onclick="PronostixAdmin.saveAutomationSettings()">Guardar API</button><button class="btn btn-primary" onclick="PronostixAdmin.syncResultsFromApi()" ${s.results_api_enabled ? "" : "disabled"}>Sincronizar resultados desde API</button></div>
+      <details class="technical-details mt-3"><summary>Proveedor gratuito recomendado</summary><p class="text-sm text-slate-600 mt-2">Proveedor: <b>TheSportsDB</b>. No capturas marcadores; Pronostix descarga eventos pasados de la liga indicada y empata por equipos + fecha. Si algún partido no empata de forma segura, se omite y queda para revisión manual.</p><p class="text-sm text-slate-500 mt-2">Modo avanzado: también puedes pegar una URL JSON propia con <code>match_id</code>, pero ya no es obligatorio para operar.</p></details>
     </section>`;
   }
 
@@ -245,11 +297,13 @@
 
   function renderSpecialResults(teams, players, result) {
     const teamsById = Object.fromEntries(teams.map(team => [team.id, team]));
-    return `<section class="admin-block"><h3 class="text-xl font-black">Resultados especiales</h3><p class="text-slate-600 mt-1">Captura campeón, subcampeón, tercer lugar y goleador cuando sean oficiales. La automatización no está implementada.</p><div class="grid md:grid-cols-4 gap-3 mt-3">
+    return `<section class="admin-block"><h3 class="text-xl font-black">Resultados especiales</h3><p class="text-slate-600 mt-1">Captura campeón, subcampeón, tercer lugar, goleador y los especiales temporales cuando sean oficiales. La captura manual sigue siendo el respaldo operativo.</p><div class="grid md:grid-cols-3 gap-3 mt-3">
       ${UI.autocompleteField({ id: "srChampion", label: "Campeón", items: teams, selected: result?.champion_team_id, placeholder: "Ej. México", help: "Busca y selecciona el equipo oficial." })}
       ${UI.autocompleteField({ id: "srRunner", label: "Subcampeón", items: teams, selected: result?.runner_up_team_id, placeholder: "Ej. Francia", help: "Busca y selecciona el equipo oficial." })}
       ${UI.autocompleteField({ id: "srThird", label: "Tercer lugar", items: teams, selected: result?.third_place_team_id, placeholder: "Ej. Inglaterra", help: "Busca y selecciona el equipo oficial." })}
       ${UI.autocompleteField({ id: "srScorer", label: "Goleador", items: players, selected: result?.top_scorer_player_id, placeholder: "Ej. Mbappé, Kane, Haaland", labelFn: player => playerLabel(player, teamsById), help: "Selecciona un jugador existente con su país." })}
+      ${UI.autocompleteField({ id: "srBestPlayer", label: "Mejor jugador", items: players, selected: result?.best_player_id, placeholder: "Ej. Mbappé, Bellingham, Messi", labelFn: player => playerLabel(player, teamsById), help: "Especial temporal. Selecciona un jugador existente." })}
+      ${UI.autocompleteField({ id: "srBestGoalkeeper", label: "Mejor portero", items: players, selected: result?.best_goalkeeper_id, placeholder: "Ej. Courtois, Martínez, Neuer", labelFn: player => playerLabel(player, teamsById), help: "Especial temporal. Selecciona un portero existente." })}
     </div><button class="btn btn-primary mt-3" onclick="PronostixAdmin.saveSpecialResults()">Guardar resultados especiales</button></section>`;
   }
 
@@ -310,7 +364,7 @@
       <div class="maintenance-grid mt-3">
         ${metricCard("Usuarios registrados", snapshot.users, "Total de perfiles registrados.")}
         ${metricCard("Usuarios pagados", snapshot.paidUsers, "Participan en ranking oficial.")}
-        ${metricCard("Usuarios dummy", snapshot.dummyProfiles, "Debe ser 0 en producción.")}
+        ${metricCard("Usuarios de prueba", snapshot.dummyProfiles, "Debe ser 0 en producción.")}
         ${metricCard("Partidos cargados", snapshot.matchesLoaded, "Calendario disponible.")}
         ${metricCard("Jugadores cargados", snapshot.playersLoaded, "Candidatos para especiales.")}
         ${metricCard("Pronósticos capturados", snapshot.predictions, "Capturas de partidos de usuarios.")}
@@ -324,7 +378,7 @@
     return `<section class="admin-block"><div class="section-title"><div><h3>Mantenimiento del torneo</h3><p>Verificación previa y limpiezas seguras para cerrar pruebas antes de producción.</p></div><span class="pill ${snapshot.isClean ? "ok" : "danger"}">${snapshot.isClean ? "Listo para producción" : "Revisar datos"}</span></div>
       <p class="text-slate-600 mt-1">Cada acción pide confirmación y conserva estructura, torneo, configuración, equipos, jugadores y calendario.</p>
       <div class="maintenance-grid mt-3">
-        ${statusCard("Usuarios dummy", snapshot.dummyProfiles, "Sin perfiles dummy conocidos.", "Hay perfiles dummy conocidos por borrar con cleanup_test_data.sql.")}
+        ${statusCard("Usuarios de prueba", snapshot.dummyProfiles, "Sin perfiles de prueba conocidos.", "Hay perfiles de prueba conocidos por borrar con cleanup_test_data.sql.")}
         ${statusCard("Pronósticos", snapshot.predictions, "Sin pronósticos cargados.", "Hay pronósticos cargados; confirma si son pruebas o producción.")}
         ${statusCard("Especiales usuarios", snapshot.specialPredictions, "Sin especiales de usuarios.", "Hay especiales de usuarios cargados; confirma si son pruebas o producción.")}
         ${statusCard("Resultados", snapshot.results, "Sin resultados capturados.", "Hay resultados capturados; confirma si son pruebas o producción.")}
@@ -362,8 +416,8 @@
   function renderDataLoadInfo() {
     return `<section class="admin-block"><h3 class="text-xl font-black">Carga de datos base y liberación</h3>
       <p class="text-slate-600 mt-1">El frontend no ejecuta SQL. Corre los scripts desde Supabase SQL Editor y valida después de cada carga.</p>
-      <ol class="list-decimal ml-5 mt-2 text-slate-700"><li><code>sql/seed_worldcup_2026.sql</code></li><li><code>sql/seed_worldcup_2026_players_candidates.sql</code></li><li><code>sql/validate_worldcup_2026_seed.sql</code></li><li><code>sql/cleanup_test_data.sql</code> si existen usuarios dummy</li><li><code>reset_full_test()</code> si necesitas borrar capturas y resultados de prueba</li><li><code>sql/validate_pre_production_clean.sql</code></li></ol>
-      <div class="grid md:grid-cols-4 gap-3 mt-3"><article class="prize-place"><h4>Schema</h4><p class="text-sm">Crea estructura desde cero. Úsalo solo para bases nuevas.</p></article><article class="prize-place"><h4>Migraciones</h4><p class="text-sm">Actualizan una base existente sin recrearla.</p></article><article class="prize-place"><h4>Seeds</h4><p class="text-sm">Cargan calendario y jugadores.</p></article><article class="prize-place"><h4>Reset</h4><p class="text-sm">Limpia pruebas sin perder calendario ni configuración.</p></article></div>
+      <ol class="list-decimal ml-5 mt-2 text-slate-700"><li><code>sql/seed_worldcup_2026.sql</code></li><li><code>sql/seed_worldcup_2026_players_candidates.sql</code></li><li><code>sql/validate_worldcup_2026_seed.sql</code></li><li><code>sql/cleanup_test_data.sql</code> si existen usuarios de prueba conocidos</li><li><code>reset_full_test()</code> si necesitas borrar capturas y resultados de prueba</li><li><code>sql/validate_pre_production_clean.sql</code></li></ol>
+      <div class="grid md:grid-cols-4 gap-3 mt-3"><article class="prize-place"><h4>Estructura</h4><p class="text-sm">Crea tablas y funciones desde cero. Úsalo solo para bases nuevas.</p></article><article class="prize-place"><h4>Migraciones</h4><p class="text-sm">Actualizan una base existente sin recrearla.</p></article><article class="prize-place"><h4>Datos base</h4><p class="text-sm">Cargan calendario y jugadores.</p></article><article class="prize-place"><h4>Limpieza</h4><p class="text-sm">Limpia pruebas sin perder calendario ni configuración.</p></article></div>
     </section>`;
   }
 
@@ -399,6 +453,7 @@
       id: 1,
       results_api_enabled: document.getElementById("resultsApiEnabled")?.checked || false,
       results_api_provider: P.val("resultsApiProvider") || null,
+      results_api_base_url: P.val("resultsApiBaseUrl") || null,
       special_results_api_enabled: document.getElementById("specialsApiEnabled")?.checked || false,
       special_results_api_provider: P.val("specialsApiProvider") || null
     };
@@ -406,6 +461,165 @@
     await Data.loadBase();
     P.toast(error ? `${error.message}. Si falta columna, ejecuta la migración de API.` : "Preparación API guardada.", !error);
     if (!error) renderAdmin();
+  }
+
+
+  function pickDefined(...values) {
+    return values.find(value => value !== undefined && value !== null && value !== "");
+  }
+
+  function normalizeApiStatus(value) {
+    const status = String(value || "FINISHED").toUpperCase();
+    return status === "SCHEDULED" ? "SCHEDULED" : "FINISHED";
+  }
+
+  function apiMatchItems(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.matches)) return payload.matches;
+    if (Array.isArray(payload?.events)) return payload.events;
+    return [];
+  }
+
+
+  function normalizeExternalText(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  function teamCandidates(team) {
+    const base = [team?.name, team?.code].map(normalizeExternalText).filter(Boolean);
+    const aliases = TEAM_ALIASES[normalizeExternalText(team?.name)] || [];
+    return [...base, ...aliases.map(normalizeExternalText)].filter(Boolean);
+  }
+
+  function teamNameMatches(externalName, team) {
+    const external = normalizeExternalText(externalName);
+    return Boolean(external) && teamCandidates(team).some(candidate => external === candidate || external.includes(candidate) || candidate.includes(external));
+  }
+
+  function eventDateValue(item) {
+    const raw = pickDefined(item.dateEvent, item.dateEventLocal, item.strTimestamp, item.date, item.kickoff_at);
+    if (!raw) return null;
+    const date = new Date(String(raw).includes("T") ? raw : `${raw}T12:00:00Z`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function closeToMatchDate(item, match) {
+    const eventDate = eventDateValue(item);
+    if (!eventDate || !match?.kickoff_at) return false;
+    return Math.abs(eventDate.getTime() - new Date(match.kickoff_at).getTime()) <= 36 * 60 * 60 * 1000;
+  }
+
+  function externalScores(item) {
+    const homeScore = Number(pickDefined(item.home_score, item.homeScore, item.home, item.intHomeScore, item.intHomePoints));
+    const awayScore = Number(pickDefined(item.away_score, item.awayScore, item.away, item.intAwayScore, item.intAwayPoints));
+    if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore) || homeScore < 0 || awayScore < 0) return null;
+    return { homeScore, awayScore };
+  }
+
+  function providerName(settings = P.state.settings || {}) {
+    return normalizeExternalText(settings.results_api_provider || "thesportsdb");
+  }
+
+  function isTheSportsDbProvider(settings = P.state.settings || {}) {
+    return providerName(settings).includes("thesportsdb") || providerName(settings).includes("sportsdb");
+  }
+
+  function buildResultsApiUrl(settings = P.state.settings || {}) {
+    const source = String(settings.results_api_base_url || "").trim();
+    if (!isTheSportsDbProvider(settings)) return source;
+    if (!source) return "";
+    if (/^https?:\/\//i.test(source)) return source;
+    return `https://www.thesportsdb.com/api/v1/json/${THE_SPORTS_DB_FREE_KEY}/eventspastleague.php?id=${encodeURIComponent(source)}`;
+  }
+
+  function resolveExternalEvent(item, matches) {
+    const scores = externalScores(item);
+    if (!scores) return null;
+    const directId = pickDefined(item.match_id, item.id);
+    const directMatch = directId ? matches.find(match => match.id === directId) : null;
+    if (directMatch) return { match: directMatch, homeScore: scores.homeScore, awayScore: scores.awayScore };
+
+    const externalHome = pickDefined(item.strHomeTeam, item.home_team, item.homeTeam);
+    const externalAway = pickDefined(item.strAwayTeam, item.away_team, item.awayTeam);
+    if (!externalHome || !externalAway) return null;
+
+    for (const match of matches) {
+      if (!closeToMatchDate(item, match)) continue;
+      const normalOrder = teamNameMatches(externalHome, match.home_team) && teamNameMatches(externalAway, match.away_team);
+      if (normalOrder) return { match, homeScore: scores.homeScore, awayScore: scores.awayScore };
+      const swappedOrder = teamNameMatches(externalHome, match.away_team) && teamNameMatches(externalAway, match.home_team);
+      if (swappedOrder) return { match, homeScore: scores.awayScore, awayScore: scores.homeScore };
+    }
+    return null;
+  }
+
+  async function logApiSync(payload) {
+    const record = {
+      tournament_id: P.state.activeTournament?.id || null,
+      sync_type: payload.sync_type || "results",
+      source: payload.source || "api",
+      provider: payload.provider || P.state.settings?.results_api_provider || null,
+      status: payload.status,
+      message: payload.message || null,
+      records_checked: Number(payload.records_checked || 0),
+      records_changed: Number(payload.records_changed || 0),
+      error_message: payload.error_message || null,
+      actor_id: P.state.session?.user?.id || null,
+      raw_summary: payload.raw_summary || {}
+    };
+    const { error } = await P.sb.from("api_sync_logs").insert(record);
+    if (error) console.warn("No se pudo registrar bitácora de sincronización:", error.message);
+  }
+
+  async function syncResultsFromApi() {
+    const settings = P.state.settings || {};
+    if (!settings.results_api_enabled) return P.toast("Habilita la sincronización de resultados antes de ejecutar la API.", false);
+    const url = buildResultsApiUrl(settings);
+    if (!url) return P.toast(isTheSportsDbProvider(settings) ? "Captura el idLeague de TheSportsDB antes de sincronizar." : "Captura la URL de resultados antes de sincronizar.", false);
+
+    let payload;
+    try {
+      const response = await fetch(url, { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      payload = await response.json();
+    } catch (error) {
+      await logApiSync({ status: "ERROR", message: "Falló la lectura de la API de resultados.", records_checked: 0, records_changed: 0, error_message: error.message });
+      return P.toast("No fue posible leer la API de resultados. Conserva la captura manual como respaldo.", false);
+    }
+
+    const items = apiMatchItems(payload);
+    const { matches } = await Data.getTournamentData();
+    let changed = 0;
+    let skipped = 0;
+    const errors = [];
+
+    for (const item of items) {
+      const resolved = resolveExternalEvent(item, matches);
+      if (!resolved) {
+        skipped += 1;
+        continue;
+      }
+      const { match, homeScore, awayScore } = resolved;
+      const { error } = await P.sb.from("matches").update({ home_score: homeScore, away_score: awayScore, status: normalizeApiStatus(item.status || item.strStatus) }).eq("id", match.id);
+      if (error) {
+        skipped += 1;
+        errors.push(error.message);
+      } else {
+        changed += 1;
+      }
+    }
+
+    const status = errors.length ? "ERROR" : skipped ? "PARTIAL" : "OK";
+    await logApiSync({ status, message: `Sincronización API: ${changed} actualizados, ${skipped} omitidos.`, records_checked: items.length, records_changed: changed, error_message: errors.join(" | ") || null, raw_summary: { skipped, provider: settings.results_api_provider || null, url } });
+    P.toast(`Sincronización API: ${changed} actualizados, ${skipped} omitidos.`, !errors.length);
+    await Data.getTournamentData(true);
+    renderAdmin();
   }
 
   async function setActiveTournament() {
@@ -445,6 +659,7 @@
 
   async function saveMatchResult(id) {
     const { error } = await P.sb.from("matches").update({ home_score: P.num(P.val(`resultHome-${id}`)), away_score: P.num(P.val(`resultAway-${id}`)), status: P.val(`status-${id}`) }).eq("id", id);
+    if (!error) await logApiSync({ source: "manual", status: "MANUAL", message: "Resultado actualizado manualmente.", records_checked: 1, records_changed: 1, raw_summary: { match_id: id } });
     P.toast(error ? error.message : "Resultado guardado.", !error);
   }
 
@@ -478,8 +693,10 @@
     const runner = P.val("srRunner");
     const third = P.val("srThird");
     const scorer = P.val("srScorer");
-    if (!champion || !runner || !third || !scorer) return P.toast("Selecciona campeón, subcampeón, tercer lugar y goleador desde la lista antes de guardar resultados especiales.", false);
-    if (![champion, runner, third].every(id => hasId(teams, id)) || !hasId(players, scorer)) return P.toast("Selecciona únicamente equipos y goleadores existentes de la lista.", false);
+    const bestPlayer = P.val("srBestPlayer");
+    const bestGoalkeeper = P.val("srBestGoalkeeper");
+    if (!champion || !runner || !third || !scorer || !bestPlayer || !bestGoalkeeper) return P.toast("Selecciona campeón, subcampeón, tercer lugar, goleador, mejor jugador y mejor portero desde la lista antes de guardar resultados especiales.", false);
+    if (![champion, runner, third].every(id => hasId(teams, id)) || ![scorer, bestPlayer, bestGoalkeeper].every(id => hasId(players, id))) return P.toast("Selecciona únicamente equipos y jugadores existentes de la lista.", false);
     const podium = [champion, runner, third];
     if (new Set(podium).size !== podium.length) return P.toast("No repitas equipos en campeón/subcampeón/tercer lugar.", false);
     const payload = {
@@ -487,11 +704,13 @@
       champion_team_id: champion,
       runner_up_team_id: runner,
       third_place_team_id: third,
-      top_scorer_player_id: scorer
+      top_scorer_player_id: scorer,
+      best_player_id: bestPlayer,
+      best_goalkeeper_id: bestGoalkeeper
     };
     const { error } = await P.sb.from("special_results").upsert(payload, { onConflict: "tournament_id" });
     P.toast(error ? error.message : "Resultados especiales guardados.", !error);
   }
 
-  window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest, saveCollapseState };
+  window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, syncResultsFromApi, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest, saveCollapseState, _internals: { buildResultsApiUrl, resolveExternalEvent, teamNameMatches, normalizeExternalText } };
 }());

@@ -1,0 +1,57 @@
+const assert = require('assert');
+const fs = require('fs');
+const vm = require('vm');
+
+const context = {
+  window: {
+    localStorage: { getItem: () => null, setItem: () => null },
+    Pronostix: {
+      state: { settings: { results_api_provider: 'thesportsdb', results_api_base_url: '4821' } },
+      esc: value => String(value ?? ''),
+      dt: value => value,
+      money: value => String(value),
+      val: () => '',
+      num: value => Number(value || 0),
+      toast: () => {}
+    },
+    PronostixUI: {},
+    PronostixData: {},
+    PronostixRankings: {}
+  },
+  console
+};
+context.global = context;
+vm.runInNewContext(fs.readFileSync('js/admin.js', 'utf8'), context, { filename: 'js/admin.js' });
+
+const internals = context.window.PronostixAdmin._internals;
+
+assert.strictEqual(
+  internals.buildResultsApiUrl({ results_api_provider: 'thesportsdb', results_api_base_url: '4821' }),
+  'https://www.thesportsdb.com/api/v1/json/3/eventspastleague.php?id=4821',
+  'Construye URL de TheSportsDB con free key 3 e idLeague'
+);
+
+assert(internals.teamNameMatches('Mexico', { name: 'México', code: 'MEX' }), 'Empata México/Mexico sin acentos');
+assert(internals.teamNameMatches('United States', { name: 'Estados Unidos', code: 'USA' }), 'Empata Estados Unidos/United States');
+
+const match = {
+  id: 'match-1',
+  kickoff_at: '2026-06-19T01:00:00Z',
+  home_team: { name: 'México', code: 'MEX' },
+  away_team: { name: 'Estados Unidos', code: 'USA' }
+};
+const resolved = internals.resolveExternalEvent({
+  strHomeTeam: 'Mexico',
+  strAwayTeam: 'United States',
+  dateEvent: '2026-06-19',
+  intHomeScore: '2',
+  intAwayScore: '1',
+  strStatus: 'Match Finished'
+}, [match]);
+
+assert(resolved, 'Resuelve evento externo por equipos + fecha');
+assert.strictEqual(resolved.match.id, 'match-1', 'Devuelve el partido interno correcto');
+assert.strictEqual(resolved.homeScore, 2, 'Mapea marcador local');
+assert.strictEqual(resolved.awayScore, 1, 'Mapea marcador visitante');
+
+console.log('API provider mapping: OK');

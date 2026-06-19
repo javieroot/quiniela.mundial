@@ -13,13 +13,13 @@ Dejar Pronostix estable para liberar alrededor de las 10:00, sin refactors grand
 5. `sql/seed_worldcup_2026.sql`.
 6. `sql/seed_worldcup_2026_players_candidates.sql`.
 7. `sql/validate_worldcup_2026_seed.sql`.
-8. `sql/cleanup_test_data.sql` si hubo usuarios dummy conocidos.
+8. `sql/cleanup_test_data.sql` si hubo usuarios de prueba conocidos.
 9. `reset_user_entries()`, `reset_tournament_results()` o `reset_full_test()` según el tipo de prueba a limpiar.
 10. `sql/validate_pre_production_clean.sql`.
 
 ## Limpieza pre-producción
 
-- `cleanup_test_data.sql`: borra usuarios dummy conocidos y sus datos asociados; conserva admin ROOT, javieroot ADMIN, equipos, jugadores, partidos, torneo y settings.
+- `cleanup_test_data.sql`: borra usuarios de prueba conocidos y sus datos asociados; conserva admin ROOT, javieroot ADMIN, equipos, jugadores, partidos, torneo y settings.
 - `reset_user_entries()`: borra pronósticos y especiales capturados por usuarios; conserva resultados, usuarios, pagos, roles, torneo, settings, equipos, calendario y jugadores.
 - `reset_tournament_results()`: borra resultados especiales y limpia marcadores/estado de partidos; conserva capturas de usuarios, usuarios, pagos, roles, torneo, settings, equipos, calendario y jugadores.
 - `reset_full_test()`: borra capturas y resultados de prueba; conserva usuarios reales, admin ROOT, javieroot ADMIN, pagos, roles, torneo, settings, equipos, calendario y jugadores.

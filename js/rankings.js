@@ -79,6 +79,8 @@
       row.special_points += prediction.runner_up_team_id && prediction.runner_up_team_id === result.runner_up_team_id ? 3 : 0;
       row.special_points += prediction.third_place_team_id && prediction.third_place_team_id === result.third_place_team_id ? 2 : 0;
       row.special_points += prediction.top_scorer_player_id && prediction.top_scorer_player_id === result.top_scorer_player_id ? 5 : 0;
+      row.special_points += prediction.best_player_id && prediction.best_player_id === result.best_player_id ? 5 : 0;
+      row.special_points += prediction.best_goalkeeper_id && prediction.best_goalkeeper_id === result.best_goalkeeper_id ? 5 : 0;
       row.last_modified = oldestModification(row.last_modified, prediction.updated_at);
     });
 

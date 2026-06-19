@@ -96,6 +96,8 @@ create table public.special_predictions(
   runner_up_team_id uuid references public.teams(id),
   third_place_team_id uuid references public.teams(id),
   top_scorer_player_id uuid references public.players(id),
+  best_player_id uuid references public.players(id),
+  best_goalkeeper_id uuid references public.players(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique(user_id,tournament_id),
@@ -110,8 +112,33 @@ create table public.special_results(
   runner_up_team_id uuid references public.teams(id),
   third_place_team_id uuid references public.teams(id),
   top_scorer_player_id uuid references public.players(id),
+  best_player_id uuid references public.players(id),
+  best_goalkeeper_id uuid references public.players(id),
   updated_at timestamptz not null default now()
 );
+
+create table public.api_sync_logs(
+  id bigint generated always as identity primary key,
+  tournament_id uuid references public.tournaments(id) on delete cascade,
+  sync_type text not null default 'results',
+  source text not null default 'api',
+  provider text,
+  status text not null,
+  message text,
+  records_checked int not null default 0,
+  records_changed int not null default 0,
+  error_message text,
+  actor_id uuid references public.profiles(id),
+  raw_summary jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  check (sync_type in ('results','special_results')),
+  check (source in ('api','manual')),
+  check (status in ('OK','PARTIAL','ERROR','MANUAL')),
+  check (records_checked >= 0),
+  check (records_changed >= 0)
+);
+create index api_sync_logs_tournament_created_idx on public.api_sync_logs(tournament_id, created_at desc);
+create index api_sync_logs_status_idx on public.api_sync_logs(status);
 
 create table public.audit_logs(
   id bigint generated always as identity primary key,
@@ -167,9 +194,11 @@ create trigger predictions_lock before insert or update on public.predictions fo
 
 create or replace function public.assert_specials_open()
 returns trigger language plpgsql security definer set search_path=public as $$
-declare k timestamptz;
+declare k timestamptz; force_unlock boolean;
 begin
   if public.is_admin(auth.uid()) then return new; end if;
+  select coalesce(specials_force_unlock,false) into force_unlock from public.settings where id=1;
+  if force_unlock then return new; end if;
   select min(kickoff_at) into k from public.matches where tournament_id=new.tournament_id;
   if k is null then select starts_at into k from public.tournaments where id=new.tournament_id; end if;
   if now() >= k then raise exception 'Especiales bloqueados'; end if;
@@ -186,6 +215,7 @@ alter table public.settings enable row level security;
 alter table public.predictions enable row level security;
 alter table public.special_predictions enable row level security;
 alter table public.special_results enable row level security;
+alter table public.api_sync_logs enable row level security;
 alter table public.audit_logs enable row level security;
 
 create policy "read tournaments" on public.tournaments for select to authenticated using(true);
@@ -215,6 +245,8 @@ create policy "admin special predictions" on public.special_predictions for all 
 
 create policy "read special results" on public.special_results for select to authenticated using(true);
 create policy "admin special results" on public.special_results for all to authenticated using(public.is_admin()) with check(public.is_admin());
+create policy "admin read api sync logs" on public.api_sync_logs for select to authenticated using(public.is_admin());
+create policy "admin insert api sync logs" on public.api_sync_logs for insert to authenticated with check(public.is_admin());
 
 insert into public.settings(id,entry_fee,admin_percentage,first_place_percentage,second_place_percentage,third_place_percentage,lock_minutes_before_match)
 values(1,200,10,50,25,15,1);
