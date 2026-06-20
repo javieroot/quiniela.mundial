@@ -6,7 +6,7 @@ const context = {
   window: {
     localStorage: { getItem: () => null, setItem: () => null },
     Pronostix: {
-      state: { settings: { results_api_provider: 'thesportsdb', results_api_base_url: '4821' } },
+      state: { settings: { results_api_provider: 'worldcup26', results_api_base_url: '' } },
       esc: value => String(value ?? ''),
       dt: value => value,
       money: value => String(value),
@@ -21,14 +21,15 @@ const context = {
   console
 };
 context.global = context;
+vm.runInNewContext(fs.readFileSync('js/worldcup26-translator.js', 'utf8'), context, { filename: 'js/worldcup26-translator.js' });
 vm.runInNewContext(fs.readFileSync('js/admin.js', 'utf8'), context, { filename: 'js/admin.js' });
 
 const internals = context.window.PronostixAdmin._internals;
 
 assert.strictEqual(
-  internals.buildResultsApiUrl({ results_api_provider: 'thesportsdb', results_api_base_url: '4821' }),
-  'https://www.thesportsdb.com/api/v1/json/3/eventspastleague.php?id=4821',
-  'Construye URL de TheSportsDB con free key 3 e idLeague'
+  internals.buildResultsApiUrl({ results_api_provider: 'worldcup26', results_api_base_url: '' }),
+  'https://worldcup26.ir/get/games',
+  'Usa worldcup26.ir/get/games como endpoint por defecto'
 );
 
 assert(internals.teamNameMatches('Mexico', { name: 'México', code: 'MEX' }), 'Empata México/Mexico sin acentos');
@@ -41,12 +42,14 @@ const match = {
   away_team: { name: 'Estados Unidos', code: 'USA' }
 };
 const resolved = internals.resolveExternalEvent({
-  strHomeTeam: 'Mexico',
-  strAwayTeam: 'United States',
-  dateEvent: '2026-06-19',
-  intHomeScore: '2',
-  intAwayScore: '1',
-  strStatus: 'Match Finished'
+  home_team_id: '1',
+  away_team_id: '13',
+  home_team_name_en: 'Mexico',
+  away_team_name_en: 'United States',
+  local_date: '06/19/2026 01:00',
+  home_score: '2',
+  away_score: '1',
+  finished: 'TRUE'
 }, [match]);
 
 assert(resolved, 'Resuelve evento externo por equipos + fecha');

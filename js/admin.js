@@ -12,56 +12,8 @@
     "00000000-0000-0000-0000-000000000006"
   ];
 
-  const THE_SPORTS_DB_FREE_KEY = "3";
-  const TEAM_ALIASES = {
-    "alemania": ["germany"],
-    "arabia saudita": ["saudi arabia"],
-    "argelia": ["algeria"],
-    "australia": ["australia"],
-    "belgica": ["belgium"],
-    "brasil": ["brazil"],
-    "canada": ["canada"],
-    "chile": ["chile"],
-    "china": ["china"],
-    "colombia": ["colombia"],
-    "corea del sur": ["south korea", "korea republic", "republic of korea"],
-    "costa de marfil": ["ivory coast", "cote divoire", "côte d’ivoire", "côte d'ivoire"],
-    "costa rica": ["costa rica"],
-    "croacia": ["croatia"],
-    "dinamarca": ["denmark"],
-    "ecuador": ["ecuador"],
-    "egipto": ["egypt"],
-    "escocia": ["scotland"],
-    "espana": ["spain"],
-    "estados unidos": ["united states", "usa", "united states of america"],
-    "francia": ["france"],
-    "gales": ["wales"],
-    "ghana": ["ghana"],
-    "inglaterra": ["england"],
-    "iran": ["iran"],
-    "islandia": ["iceland"],
-    "italia": ["italy"],
-    "japon": ["japan"],
-    "marruecos": ["morocco"],
-    "mexico": ["mexico"],
-    "noruega": ["norway"],
-    "nueva zelanda": ["new zealand"],
-    "paises bajos": ["netherlands", "holland"],
-    "panama": ["panama"],
-    "paraguay": ["paraguay"],
-    "peru": ["peru"],
-    "polonia": ["poland"],
-    "portugal": ["portugal"],
-    "qatar": ["qatar"],
-    "republica checa": ["czech republic", "czechia"],
-    "senegal": ["senegal"],
-    "serbia": ["serbia"],
-    "suecia": ["sweden"],
-    "suiza": ["switzerland"],
-    "tunez": ["tunisia"],
-    "turquia": ["turkey", "turkiye", "türkiye"],
-    "uruguay": ["uruguay"]
-  };
+  const WorldCup26 = window.PronostixWorldCup26 || {};
+
 
   const isRoot = () => P.state.profile?.role === "ROOT";
   const ELIMINATION_ORDER = ["Dieciseisavos", "Octavos", "Cuartos", "Semifinales", "Tercer Lugar", "Final"];
@@ -203,13 +155,13 @@
       <p class="text-slate-600 mt-1">Usa un proveedor real para evitar capturar marcadores a mano. La captura manual sigue disponible como respaldo si el proveedor no trae un partido.</p>
       <div class="grid md:grid-cols-2 gap-4 mt-3">
         <label><input id="resultsApiEnabled" type="checkbox" ${s.results_api_enabled ? "checked" : ""}> Habilitar sincronización de resultados de partidos</label>
-        <label>Proveedor/API partidos<input id="resultsApiProvider" class="input" value="${P.esc(s.results_api_provider || "thesportsdb")}" placeholder="thesportsdb"></label>
-        <label class="md:col-span-2">Liga/endpoint del proveedor<input id="resultsApiBaseUrl" class="input" value="${P.esc(s.results_api_base_url || "")}" placeholder="TheSportsDB idLeague, ej. 4821, o URL JSON avanzada"></label>
+        <label>Proveedor/API partidos<input id="resultsApiProvider" class="input" value="${P.esc(s.results_api_provider || "worldcup26")}" placeholder="worldcup26"></label>
+        <label class="md:col-span-2">Endpoint de partidos<input id="resultsApiBaseUrl" class="input" value="${P.esc(s.results_api_base_url || WorldCup26.WORLD_CUP_26_GAMES_URL || "")}" placeholder="https://worldcup26.ir/get/games"></label>
         <label><input id="specialsApiEnabled" type="checkbox" ${s.special_results_api_enabled ? "checked" : ""}> Registrar proveedor externo para especiales</label>
         <label>Proveedor/API especiales<input id="specialsApiProvider" class="input" value="${P.esc(s.special_results_api_provider || "")}" placeholder="Opcional a futuro"></label>
       </div>
       <div class="flex gap-2 mt-3"><button class="btn btn-secondary" onclick="PronostixAdmin.saveAutomationSettings()">Guardar API</button><button class="btn btn-primary" onclick="PronostixAdmin.syncResultsFromApi()" ${s.results_api_enabled ? "" : "disabled"}>Sincronizar resultados desde API</button></div>
-      <details class="technical-details mt-3"><summary>Proveedor gratuito recomendado</summary><p class="text-sm text-slate-600 mt-2">Proveedor: <b>TheSportsDB</b>. No capturas marcadores; Pronostix descarga eventos pasados de la liga indicada y empata por equipos + fecha. Si algún partido no empata de forma segura, se omite y queda para revisión manual.</p><p class="text-sm text-slate-500 mt-2">Modo avanzado: también puedes pegar una URL JSON propia con <code>match_id</code>, pero ya no es obligatorio para operar.</p></details>
+      <details class="technical-details mt-3" open><summary>Proveedor recomendado</summary><p class="text-sm text-slate-600 mt-2">Proveedor: <b>worldcup26.ir</b>. Pronostix lee <code>/get/games</code>, traduce IDs y nombres desde <code>js/worldcup26-translator.js</code>, y actualiza solo marcadores/estado de partidos. Rankings y premios no se tocan.</p><p class="text-sm text-slate-500 mt-2">Sugerencia operativa: conservar este botón para sincronización manual y, cuando exista un backend/job seguro, programarlo cada 30 minutos usando el mismo endpoint.</p></details>
     </section>`;
   }
 
@@ -285,6 +237,33 @@
       ${rounds.length ? `<h3 class="group-section-heading">Eliminatorias / fases</h3>${rounds.map(renderResultGroup).join("")}` : ""}`;
   }
 
+  function renderGroupsTablePlaceholder() {
+    const url = WorldCup26.WORLD_CUP_26_GROUPS_URL || "https://worldcup26.ir/get/groups";
+    return `<details class="technical-details mt-3"><summary>Tabla visual de grupos worldcup26.ir</summary><p class="text-sm text-slate-600 mt-2">Endpoint configurado: <code>${P.esc(url)}</code>. Esta tabla es solo visual/operativa y no modifica rankings ni premios.</p><button class="btn btn-secondary mt-2" onclick="PronostixAdmin.loadWorldCup26Groups()">Cargar tabla de grupos</button><div id="worldcup26GroupsTable" class="table-wrap mt-3"></div></details>`;
+  }
+
+  function renderGroupsTable(groups) {
+    if (!groups.length) return `<p class="text-sm text-slate-500">El endpoint no devolvió grupos para mostrar.</p>`;
+    return `<table class="data-table"><thead><tr><th>Grupo</th><th>Equipo</th><th>Pts</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th></tr></thead><tbody>${groups.map(group => {
+      const groupName = WorldCup26.groupLabel ? WorldCup26.groupLabel(group.group || group.name || group.group_name) : `Grupo ${group.group || ""}`;
+      const teams = Array.isArray(group.teams) ? group.teams : Array.isArray(group.table) ? group.table : Array.isArray(group.standings) ? group.standings : [group];
+      return teams.map(team => `<tr><td>${P.esc(groupName)}</td><td>${P.esc(team.name_en || team.team_name_en || team.name || team.team || "—")}</td><td>${P.esc(team.pts ?? team.points ?? "—")}</td><td>${P.esc(team.played ?? team.mp ?? team.p ?? "—")}</td><td>${P.esc(team.win ?? team.w ?? "—")}</td><td>${P.esc(team.draw ?? team.d ?? "—")}</td><td>${P.esc(team.loss ?? team.l ?? "—")}</td><td>${P.esc(team.gf ?? team.goals_for ?? "—")}</td><td>${P.esc(team.ga ?? team.goals_against ?? "—")}</td><td>${P.esc(team.gd ?? team.goal_difference ?? "—")}</td></tr>`).join("");
+    }).join("")}</tbody></table>`;
+  }
+
+  async function loadWorldCup26Groups() {
+    const target = document.getElementById("worldcup26GroupsTable");
+    if (target) target.innerHTML = `<p class="text-sm text-slate-500">Cargando grupos...</p>`;
+    try {
+      const response = await fetch(WorldCup26.WORLD_CUP_26_GROUPS_URL || "https://worldcup26.ir/get/groups", { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      if (target) target.innerHTML = renderGroupsTable(groupItems(payload));
+    } catch (error) {
+      if (target) target.innerHTML = `<p class="text-sm text-red-600">No se pudo cargar la tabla visual: ${P.esc(error.message)}</p>`;
+    }
+  }
+
   function renderMatchResults(matches) {
     const captured = matches.filter(hasMatchScore).length;
     const finished = matches.filter(match => match.status === "FINISHED").length;
@@ -292,6 +271,7 @@
     const groups = groupMatches(matches, hasMatchScore);
     return `<section class="admin-block"><h3 class="text-xl font-black">Resultados de partidos</h3><p class="text-slate-600 mt-1">Captura final del marcador y marca el partido como finalizado. La captura manual es la fuente principal.</p>
       ${renderProgressSummary("Resultados capturados", captured, matches.length, [{ label: "Partidos finalizados", value: finished }, { label: "Partidos pendientes", value: pending }])}
+      <div id="worldcup26-groups-preview">${renderGroupsTablePlaceholder()}</div>
       <div class="match-groups mt-3">${renderResultGroups(groups)}</div></section>`;
   }
 
@@ -477,42 +457,44 @@
 
   function normalizeApiStatus(value) {
     const status = String(value || "FINISHED").toUpperCase();
-    return status === "SCHEDULED" ? "SCHEDULED" : "FINISHED";
+    if (["FALSE", "SCHEDULED", "NS", "NOT STARTED"].includes(status)) return "SCHEDULED";
+    return "FINISHED";
   }
 
   function apiMatchItems(payload) {
     if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.games)) return payload.games;
     if (Array.isArray(payload?.matches)) return payload.matches;
     if (Array.isArray(payload?.events)) return payload.events;
     return [];
   }
 
-
-  function normalizeExternalText(value) {
-    return String(value || "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/&/g, "and")
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
+  function groupItems(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.groups)) return payload.groups;
+    if (Array.isArray(payload?.data)) return payload.data;
+    return [];
   }
 
-  function teamCandidates(team) {
-    const base = [team?.name, team?.code].map(normalizeExternalText).filter(Boolean);
-    const aliases = TEAM_ALIASES[normalizeExternalText(team?.name)] || [];
-    return [...base, ...aliases.map(normalizeExternalText)].filter(Boolean);
+
+  function normalizeExternalText(value) {
+    return WorldCup26.normalizeText ? WorldCup26.normalizeText(value) : String(value || "").toLowerCase().trim();
   }
 
   function teamNameMatches(externalName, team) {
-    const external = normalizeExternalText(externalName);
-    return Boolean(external) && teamCandidates(team).some(candidate => external === candidate || external.includes(candidate) || candidate.includes(external));
+    return WorldCup26.teamNameMatches ? WorldCup26.teamNameMatches(externalName, team) : normalizeExternalText(externalName) === normalizeExternalText(team?.name);
+  }
+
+  function teamIdMatches(externalTeamId, team) {
+    return WorldCup26.teamIdMatches ? WorldCup26.teamIdMatches(externalTeamId, team) : false;
   }
 
   function eventDateValue(item) {
-    const raw = pickDefined(item.dateEvent, item.dateEventLocal, item.strTimestamp, item.date, item.kickoff_at);
+    const raw = pickDefined(item.local_date, item.dateEvent, item.dateEventLocal, item.strTimestamp, item.date, item.kickoff_at);
     if (!raw) return null;
-    const date = new Date(String(raw).includes("T") ? raw : `${raw}T12:00:00Z`);
+    const text = String(raw).trim();
+    const local = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
+    const date = local ? new Date(Date.UTC(Number(local[3]), Number(local[1]) - 1, Number(local[2]), Number(local[4] || 12), Number(local[5] || 0))) : new Date(text.includes("T") ? text : `${text}T12:00:00Z`);
     return Number.isNaN(date.getTime()) ? null : date;
   }
 
@@ -530,37 +512,38 @@
   }
 
   function providerName(settings = P.state.settings || {}) {
-    return normalizeExternalText(settings.results_api_provider || "thesportsdb");
+    return normalizeExternalText(settings.results_api_provider || "worldcup26");
   }
 
-  function isTheSportsDbProvider(settings = P.state.settings || {}) {
-    return providerName(settings).includes("thesportsdb") || providerName(settings).includes("sportsdb");
+  function isWorldCup26Provider(settings = P.state.settings || {}) {
+    return providerName(settings).includes("worldcup26") || providerName(settings).includes("world cup 26");
   }
 
   function buildResultsApiUrl(settings = P.state.settings || {}) {
     const source = String(settings.results_api_base_url || "").trim();
-    if (!isTheSportsDbProvider(settings)) return source;
-    if (!source) return "";
-    if (/^https?:\/\//i.test(source)) return source;
-    return `https://www.thesportsdb.com/api/v1/json/${THE_SPORTS_DB_FREE_KEY}/eventspastleague.php?id=${encodeURIComponent(source)}`;
+    if (source) return source;
+    if (isWorldCup26Provider(settings)) return WorldCup26.WORLD_CUP_26_GAMES_URL || "https://worldcup26.ir/get/games";
+    return source;
   }
 
   function resolveExternalEvent(item, matches) {
     const scores = externalScores(item);
     if (!scores) return null;
-    const directId = pickDefined(item.match_id, item.id);
+    const directId = pickDefined(item.match_id);
     const directMatch = directId ? matches.find(match => match.id === directId) : null;
     if (directMatch) return { match: directMatch, homeScore: scores.homeScore, awayScore: scores.awayScore };
 
-    const externalHome = pickDefined(item.strHomeTeam, item.home_team, item.homeTeam);
-    const externalAway = pickDefined(item.strAwayTeam, item.away_team, item.awayTeam);
+    const externalHomeId = pickDefined(item.home_team_id, item.homeTeamId);
+    const externalAwayId = pickDefined(item.away_team_id, item.awayTeamId);
+    const externalHome = pickDefined(item.home_team_name_en, item.strHomeTeam, item.home_team, item.homeTeam);
+    const externalAway = pickDefined(item.away_team_name_en, item.strAwayTeam, item.away_team, item.awayTeam);
     if (!externalHome || !externalAway) return null;
 
     for (const match of matches) {
       if (!closeToMatchDate(item, match)) continue;
-      const normalOrder = teamNameMatches(externalHome, match.home_team) && teamNameMatches(externalAway, match.away_team);
+      const normalOrder = (teamIdMatches(externalHomeId, match.home_team) || teamNameMatches(externalHome, match.home_team)) && (teamIdMatches(externalAwayId, match.away_team) || teamNameMatches(externalAway, match.away_team));
       if (normalOrder) return { match, homeScore: scores.homeScore, awayScore: scores.awayScore };
-      const swappedOrder = teamNameMatches(externalHome, match.away_team) && teamNameMatches(externalAway, match.home_team);
+      const swappedOrder = (teamIdMatches(externalHomeId, match.away_team) || teamNameMatches(externalHome, match.away_team)) && (teamIdMatches(externalAwayId, match.home_team) || teamNameMatches(externalAway, match.home_team));
       if (swappedOrder) return { match, homeScore: scores.awayScore, awayScore: scores.homeScore };
     }
     return null;
@@ -588,7 +571,7 @@
     const settings = P.state.settings || {};
     if (!settings.results_api_enabled) return P.toast("Habilita la sincronización de resultados antes de ejecutar la API.", false);
     const url = buildResultsApiUrl(settings);
-    if (!url) return P.toast(isTheSportsDbProvider(settings) ? "Captura el idLeague de TheSportsDB antes de sincronizar." : "Captura la URL de resultados antes de sincronizar.", false);
+    if (!url) return P.toast("Captura el endpoint de resultados antes de sincronizar.", false);
 
     let payload;
     try {
@@ -613,7 +596,7 @@
         continue;
       }
       const { match, homeScore, awayScore } = resolved;
-      const { error } = await P.sb.from("matches").update({ home_score: homeScore, away_score: awayScore, status: normalizeApiStatus(item.status || item.strStatus) }).eq("id", match.id);
+      const { error } = await P.sb.from("matches").update({ home_score: homeScore, away_score: awayScore, status: normalizeApiStatus(pickDefined(item.finished, item.status, item.strStatus)) }).eq("id", match.id);
       if (error) {
         skipped += 1;
         errors.push(error.message);
@@ -641,7 +624,7 @@
 
   async function saveTournamentName() {
     const name = P.val("tournamentName");
-    if (!name) return P.toast("El nombre del torneo no puede estar vacío.", false);
+    if (!name) return P.toast("El nombre del torneo no puede estar vacío.");
     const { error } = await P.sb.from("tournaments").update({ name }).eq("id", P.state.activeTournament.id);
     await Data.loadBase();
     P.toast(error ? error.message : "Nombre del torneo guardado.", !error);
@@ -719,5 +702,5 @@
     P.toast(error ? error.message : "Resultados especiales guardados.", !error);
   }
 
-  window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, syncResultsFromApi, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest, saveCollapseState, _internals: { buildResultsApiUrl, resolveExternalEvent, teamNameMatches, normalizeExternalText } };
+  window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, syncResultsFromApi, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest, saveCollapseState, loadWorldCup26Groups, _internals: { buildResultsApiUrl, resolveExternalEvent, teamNameMatches, normalizeExternalText, apiMatchItems, groupItems } };
 }());

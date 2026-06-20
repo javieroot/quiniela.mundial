@@ -130,8 +130,9 @@ Estado actual:
 - La captura manual de resultados sigue siendo respaldo.
 - Existen flags de preparación en settings.
 - Administración permite configurar proveedor de resultados.
-- Proveedor recomendado sin registro: TheSportsDB.
-- Para TheSportsDB se captura el idLeague y Pronostix construye la URL automáticamente.
+- Proveedor recomendado: worldcup26.ir.
+- Para partidos se usa https://worldcup26.ir/get/games; si el campo queda vacío y el proveedor es worldcup26, Pronostix usa ese endpoint por defecto.
+- La traducción de IDs/nombres vive en js/worldcup26-translator.js para evitar hardcodear alias dentro de Administración.
 - Partidos que no empatan de forma segura se omiten y quedan para revisión manual.
 
 ## GitHub Pages
@@ -205,15 +206,14 @@ La operación con proveedor externo y especiales temporales está documentada en
 
 Proveedor recomendado:
 
-- thesportsdb
+- worldcup26
 
 Configuración en Administración:
 
-- Proveedor/API partidos: thesportsdb
-- Liga/endpoint del proveedor: idLeague de TheSportsDB
+- Proveedor/API partidos: worldcup26
+- Endpoint de partidos: https://worldcup26.ir/get/games
+- Tabla visual de grupos: https://worldcup26.ir/get/groups
 
-Pronostix construye internamente:
-
-https://www.thesportsdb.com/api/v1/json/3/eventspastleague.php?id=ID_LEAGUE
+Pronostix mantiene el botón de sincronización manual y puede reutilizarse después en un job programado, por ejemplo cada 30 minutos, sin tocar rankings ni premios.
 
 La captura manual permanece disponible como respaldo.
