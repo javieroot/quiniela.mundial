@@ -35,6 +35,11 @@ assert.strictEqual(
 assert(internals.teamNameMatches('Mexico', { name: 'México', code: 'MEX' }), 'Empata México/Mexico sin acentos');
 assert(internals.teamNameMatches('United States', { name: 'Estados Unidos', code: 'USA' }), 'Empata Estados Unidos/United States');
 assert.strictEqual(context.window.PronostixWorldCup26.teamIdMatches('1', { id: '20260000-0000-0000-0000-000000000201', name: 'México' }), true, 'Permite probar empates por IDs externos del proveedor');
+assert.strictEqual(context.window.PronostixWorldCup26.supabaseTeamId('17'), '20260000-0000-0000-0000-000000000219', 'worldcup26 team_id 17 corresponde a Alemania en Supabase');
+assert.strictEqual(context.window.PronostixWorldCup26.supabaseTeamId('19'), '20260000-0000-0000-0000-000000000217', 'worldcup26 team_id 19 corresponde a Costa de Marfil en Supabase');
+assert.strictEqual(context.window.PronostixWorldCup26.supabaseTeamId('25'), '20260000-0000-0000-0000-000000000227', 'worldcup26 team_id 25 corresponde a Bélgica en Supabase');
+assert.strictEqual(context.window.PronostixWorldCup26.supabaseTeamId('29'), '20260000-0000-0000-0000-000000000231', 'worldcup26 team_id 29 corresponde a España en Supabase');
+assert.strictEqual(context.window.PronostixWorldCup26.supabaseTeamId('45'), '20260000-0000-0000-0000-000000000247', 'worldcup26 team_id 45 corresponde a Inglaterra en Supabase');
 
 const match = {
   id: 'match-1',
