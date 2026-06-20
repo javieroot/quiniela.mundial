@@ -304,12 +304,25 @@
     return `<details class="technical-details mt-3"><summary>Tabla visual de grupos worldcup26.ir</summary><p class="text-sm text-slate-600 mt-2">Endpoint configurado: <code>${P.esc(url)}</code>. Esta tabla es solo visual/operativa y no modifica rankings ni premios.</p><button class="btn btn-secondary mt-2" onclick="PronostixAdmin.loadWorldCup26Groups()">Cargar tabla de grupos</button><div id="worldcup26GroupsTable" class="table-wrap mt-3"></div></details>`;
   }
 
+  function groupTeamDisplayName(team) {
+    return pickDefined(
+      team.name_es,
+      team.team_name_es,
+      team.name_en,
+      team.team_name_en,
+      team.name,
+      team.team,
+      team.country,
+      team.team_id && WorldCup26.teamNameById?.(team.team_id)
+    ) || "—";
+  }
+
   function renderGroupsTable(groups) {
     if (!groups.length) return `<p class="text-sm text-slate-500">El endpoint no devolvió grupos para mostrar.</p>`;
     return `<table class="data-table"><thead><tr><th>Grupo</th><th>Equipo</th><th>Pts</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th></tr></thead><tbody>${groups.map(group => {
       const groupName = WorldCup26.groupLabel ? WorldCup26.groupLabel(group.group || group.name || group.group_name) : `Grupo ${group.group || ""}`;
       const teams = Array.isArray(group.teams) ? group.teams : Array.isArray(group.table) ? group.table : Array.isArray(group.standings) ? group.standings : [group];
-      return teams.map(team => `<tr><td>${P.esc(groupName)}</td><td>${P.esc(team.name_en || team.team_name_en || team.name || team.team || "—")}</td><td>${P.esc(team.pts ?? team.points ?? "—")}</td><td>${P.esc(team.played ?? team.mp ?? team.p ?? "—")}</td><td>${P.esc(team.win ?? team.w ?? "—")}</td><td>${P.esc(team.draw ?? team.d ?? "—")}</td><td>${P.esc(team.loss ?? team.l ?? "—")}</td><td>${P.esc(team.gf ?? team.goals_for ?? "—")}</td><td>${P.esc(team.ga ?? team.goals_against ?? "—")}</td><td>${P.esc(team.gd ?? team.goal_difference ?? "—")}</td></tr>`).join("");
+      return teams.map(team => `<tr><td>${P.esc(groupName)}</td><td>${P.esc(groupTeamDisplayName(team))}</td><td>${P.esc(team.pts ?? team.points ?? "—")}</td><td>${P.esc(team.played ?? team.mp ?? team.p ?? "—")}</td><td>${P.esc(team.win ?? team.w ?? "—")}</td><td>${P.esc(team.draw ?? team.d ?? "—")}</td><td>${P.esc(team.loss ?? team.l ?? "—")}</td><td>${P.esc(team.gf ?? team.goals_for ?? "—")}</td><td>${P.esc(team.ga ?? team.goals_against ?? "—")}</td><td>${P.esc(team.gd ?? team.goal_difference ?? "—")}</td></tr>`).join("");
     }).join("")}</tbody></table>`;
   }
 
@@ -544,7 +557,7 @@
 
   function teamNameMatches(externalName, team) {
     return WorldCup26.teamNameMatches ? WorldCup26.teamNameMatches(externalName, team) : normalizeExternalText(externalName) === normalizeExternalText(team?.name);
-  }
+  }	    
 
   function teamIdMatches(externalTeamId, team) {
     return WorldCup26.teamIdMatches ? WorldCup26.teamIdMatches(externalTeamId, team) : false;
@@ -625,8 +638,17 @@
 
     const externalHomeId = pickDefined(item.home_team_id, item.homeTeamId);
     const externalAwayId = pickDefined(item.away_team_id, item.awayTeamId);
-    const externalHome = pickDefined(item.home_team_name_en, item.strHomeTeam, item.home_team, item.homeTeam);
-    const externalAway = pickDefined(item.away_team_name_en, item.strAwayTeam, item.away_team, item.awayTeam);
+    const externalHome = pickDefined(item.home_team_name_en, item.home_team_name_es, item.strHomeTeam, item.home_team, item.homeTeam);
+    const externalAway = pickDefined(item.away_team_name_en, item.away_team_name_es, item.strAwayTeam, item.away_team, item.awayTeam);
+
+    if (externalHomeId && externalAwayId) {
+      const idMatch = matches.find(match => teamIdMatches(externalHomeId, match.home_team) && teamIdMatches(externalAwayId, match.away_team));
+      if (idMatch) return { match: idMatch, homeScore: scores.homeScore, awayScore: scores.awayScore };
+
+      const swappedIdMatch = matches.find(match => teamIdMatches(externalHomeId, match.away_team) && teamIdMatches(externalAwayId, match.home_team));
+      if (swappedIdMatch) return { match: swappedIdMatch, homeScore: scores.awayScore, awayScore: scores.homeScore };
+    }
+
     if (!externalHome || !externalAway) return null;
 
     for (const match of matches) {
@@ -796,4 +818,4 @@
   }
 
   window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, syncResultsFromApi, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest, saveCollapseState, loadWorldCup26Groups, _internals: { buildResultsApiUrl, buildFetchUrls, fetchJsonWithFallback, resolveExternalEvent, teamNameMatches, normalizeExternalText, apiMatchItems, groupItems, isApiItemFinished, buildLocalStandings } };
-}());
+}());	      

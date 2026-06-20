@@ -12,6 +12,58 @@
     })
   ));
 
+
+  const TEAM_NAMES_BY_ID = Object.freeze({
+    "1": "México",
+    "2": "Sudáfrica",
+    "3": "Corea del Sur",
+    "4": "Chequia",
+    "5": "Canadá",
+    "6": "Bosnia y Herzegovina",
+    "7": "Catar",
+    "8": "Suiza",
+    "9": "Brasil",
+    "10": "Marruecos",
+    "11": "Haití",
+    "12": "Escocia",
+    "13": "Estados Unidos",
+    "14": "Paraguay",
+    "15": "Australia",
+    "16": "Turquía",
+    "17": "Alemania",
+    "18": "Curazao",
+    "19": "Costa de Marfil",
+    "20": "Ecuador",
+    "21": "Países Bajos",
+    "22": "Japón",
+    "23": "Suecia",
+    "24": "Túnez",
+    "25": "Bélgica",
+    "26": "Egipto",
+    "27": "Irán",
+    "28": "Nueva Zelanda",
+    "29": "España",
+    "30": "Cabo Verde",
+    "31": "Arabia Saudita",
+    "32": "Uruguay",
+    "33": "Francia",
+    "34": "Senegal",
+    "35": "Irak",
+    "36": "Noruega",
+    "37": "Argentina",
+    "38": "Argelia",
+    "39": "Austria",
+    "40": "Jordania",
+    "41": "Portugal",
+    "42": "RD Congo",
+    "43": "Uzbekistán",
+    "44": "Colombia",
+    "45": "Inglaterra",
+    "46": "Croacia",
+    "47": "Ghana",
+    "48": "Panamá"
+  });
+
   const TEAM_ALIASES = Object.freeze({
     "alemania": ["germany"],
     "arabia saudita": ["saudi arabia"],
@@ -77,6 +129,10 @@
     return TEAM_ID_MAP[String(externalTeamId || "").trim()] || null;
   }
 
+  function teamNameById(externalTeamId) {
+    return TEAM_NAMES_BY_ID[String(externalTeamId || "").trim()] || null;
+  }
+
   function teamCandidates(team) {
     const base = [team?.id, team?.name, team?.code].map(normalizeText).filter(Boolean);
     const aliases = TEAM_ALIASES[normalizeText(team?.name)] || [];
@@ -103,5 +159,5 @@
     return `${WORLD_CUP_26_CORS_PROXY_URL}${encodeURIComponent(url)}`;
   }
 
-  window.PronostixWorldCup26 = { WORLD_CUP_26_GAMES_URL, WORLD_CUP_26_GROUPS_URL, WORLD_CUP_26_CORS_PROXY_URL, TEAM_ID_MAP, TRUST_TEAM_ID_MAP, TEAM_ALIASES, normalizeText, supabaseTeamId, teamNameMatches, teamIdMatches, groupLabel, proxiedUrl };
+  window.PronostixWorldCup26 = { WORLD_CUP_26_GAMES_URL, WORLD_CUP_26_GROUPS_URL, WORLD_CUP_26_CORS_PROXY_URL, TEAM_ID_MAP, TEAM_NAMES_BY_ID, TRUST_TEAM_ID_MAP, TEAM_ALIASES, normalizeText, supabaseTeamId, teamNameById, teamNameMatches, teamIdMatches, groupLabel, proxiedUrl };
 }());

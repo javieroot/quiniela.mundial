@@ -39,21 +39,22 @@ assert.strictEqual(context.window.PronostixWorldCup26.teamIdMatches('1', { id: '
 const match = {
   id: 'match-1',
   kickoff_at: '2026-06-19T01:00:00Z',
-  home_team: { name: 'México', code: 'MEX' },
-  away_team: { name: 'Estados Unidos', code: 'USA' }
+  home_team: { id: '20260000-0000-0000-0000-000000000201', name: 'México', code: 'MEX' },
+  away_team: { id: '20260000-0000-0000-0000-000000000213', name: 'Estados Unidos', code: 'USA' }
 };
 const resolved = internals.resolveExternalEvent({
   home_team_id: '1',
   away_team_id: '13',
   home_team_name_en: 'Mexico',
   away_team_name_en: 'United States',
-  local_date: '06/19/2026 01:00',
+  local_date: '06/01/2026 01:00',
   home_score: '2',
   away_score: '1',
   finished: 'TRUE'
 }, [match]);
 
-assert(resolved, 'Resuelve evento externo por equipos + fecha');
+assert.strictEqual(context.window.PronostixWorldCup26.teamNameById('45'), 'Inglaterra', 'Traduce team_id de grupos a nombre visible');
+assert(resolved, 'Resuelve evento externo por ID de proveedor aunque la fecha no coincida');
 assert.strictEqual(resolved.match.id, 'match-1', 'Devuelve el partido interno correcto');
 assert.strictEqual(resolved.homeScore, 2, 'Mapea marcador local');
 assert.strictEqual(resolved.awayScore, 1, 'Mapea marcador visitante');

@@ -1,5 +1,5 @@
 -- Pronostix - resultados oficiales Mundial 2026
--- Jornada 1 completa + Jornada 2 actualizada por operación.
+-- Jornada 1 completa + Jornada 2 completada para grupos A, B, C y D.
 -- Ejecutar en Supabase SQL Editor cuando se quiera corregir/cargar resultados oficiales.
 -- No toca rankings, premios, usuarios ni pronósticos.
 
@@ -50,6 +50,7 @@ with results(match_id, home_score, away_score) as (
     ('20260000-0000-0000-0000-000000000428'::uuid, 6, 0), -- Grupo B: Canadá 6 - 0 Catar
     ('20260000-0000-0000-0000-000000000429'::uuid, 0, 1), -- Grupo C: Escocia 0 - 1 Marruecos
     ('20260000-0000-0000-0000-000000000430'::uuid, 3, 0), -- Grupo C: Brasil 3 - 0 Haití
+    ('20260000-0000-0000-0000-000000000431'::uuid, 0, 1), -- Grupo D: Turquía 0 - 1 Paraguay
     ('20260000-0000-0000-0000-000000000432'::uuid, 2, 0)  -- Grupo D: Estados Unidos 2 - 0 Australia
 )
 update public.matches m
@@ -60,10 +61,6 @@ set
 from results r
 where m.id = r.match_id;
 
--- Turquía 0 - 1 Paraguay está en juego, por eso NO se finaliza aquí.
--- Si termina con ese marcador, ejecutar:
--- update public.matches
--- set home_score = 0, away_score = 1, status = 'FINISHED'
--- where id = '20260000-0000-0000-0000-000000000431';
+-- Total esperado: 32 partidos finalizados (24 de Jornada 1 + 8 de Jornada 2).
 
 commit;
