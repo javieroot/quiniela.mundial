@@ -311,7 +311,7 @@
 
   function renderGroupsTablePlaceholder() {
     const url = WorldCup26.WORLD_CUP_26_GROUPS_URL || "https://worldcup26.ir/get/groups";
-    return `<details class="technical-details standings-shell worldcup-groups-shell mt-3"><summary><span>Tabla visual de grupos worldcup26.ir</span><small>Vista externa</small></summary><p class="standings-note mt-2">Endpoint configurado: <code>${P.esc(url)}</code>. Esta tabla es solo visual/operativa y no modifica rankings ni premios.</p><button class="btn btn-secondary mt-2" onclick="PronostixAdmin.loadWorldCup26Groups()">Cargar tabla de grupos</button><div id="worldcup26GroupsTable" class="table-wrap mt-3"></div></details>`;
+    return `<details class="technical-details standings-shell worldcup-groups-shell mt-3"><summary><span>Tabla visual de grupos worldcup26.ir</span><small>Vista externa</small></summary><p class="standings-note mt-2">Endpoint configurado: <code>${P.esc(url)}</code>. Esta tabla es solo visual/operativa y no modifica rankings ni premios.</p><div class="groups-toolbar"><button class="btn btn-primary groups-load-action" onclick="PronostixAdmin.loadWorldCup26Groups()">Cargar tabla de grupos</button><span>Usa esta vista para comparar contra la tabla local de Supabase.</span></div><div id="worldcup26GroupsTable" class="table-wrap mt-3"></div></details>`;
   }
 
   function groupTeamDisplayName(team) {
