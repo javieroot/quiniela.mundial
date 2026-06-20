@@ -33,11 +33,11 @@
     P.app.innerHTML = `<div id="toast" class="hidden"></div>
       <header class="site-header">
         <div class="layout header-inner">
-          <div>
+          <div class="header-brand-block">
             <h1 class="brand">${P.esc(P.cfg.platformName || "Pronostix")}</h1>
             <p class="user-line">${profile ? `${userChip(profile)} · ${badge(profile.payment_status)}` : ""}</p>
           </div>
-          <nav class="nav">
+          <nav class="nav primary-nav" aria-label="Menú principal">
             ${items.map(([id, label]) => `<button class="nav-btn ${P.state.view === id ? "active" : ""}" onclick="PronostixApp.go('${id}')">${label}</button>`).join("")}
             <button class="nav-btn danger" onclick="PronostixAuth.logout()">Salir</button>
           </nav>

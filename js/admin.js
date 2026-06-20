@@ -126,25 +126,27 @@
 
   function renderSettings() {
     const s = P.state.settings || {};
-    return `<section class="admin-block"><div class="section-title"><div><h2>Configuración económica y bloqueo</h2><p>Define inscripción, comisión visible solo en Administración, premios y bloqueo de capturas.</p></div><button class="btn btn-primary" onclick="PronostixAdmin.saveSettings()">Guardar configuración</button></div>
-      <div class="grid md:grid-cols-2 gap-5 mt-4">
-        <div><h3 class="font-black">Premios del torneo</h3><p class="text-sm text-slate-500">Configuración esperada: inscripción 200 MXN, comisión admin 10%, premios 50% / 25% / 15%. La suma total debe ser 100%.</p>
-          <div class="form-grid mt-2">
-            <label>Costo de inscripción<input id="entryFee" class="input" type="number" min="0" value="${s.entry_fee ?? 0}"></label>
-            <label>% comisión admin<input id="adminPct" class="input" type="number" min="0" max="100" value="${s.admin_percentage ?? 0}"></label>
-            <label>% 1° lugar<input id="firstPct" class="input" type="number" min="0" max="100" value="${s.first_place_percentage ?? 0}"></label>
-            <label>% 2° lugar<input id="secondPct" class="input" type="number" min="0" max="100" value="${s.second_place_percentage ?? 0}"></label>
-            <label>% 3° lugar<input id="thirdPct" class="input" type="number" min="0" max="100" value="${s.third_place_percentage ?? 0}"></label>
-            <label>Minutos de bloqueo<input id="lockMinutes" class="input" type="number" min="0" value="${s.lock_minutes_before_match ?? 1}"></label>
+    return `<section class="admin-block settings-panel"><div class="section-title settings-title"><div><span class="eyebrow">Operación del torneo</span><h2>Configuración económica y bloqueo</h2><p>Define inscripción, comisión visible solo en Administración, premios y reglas de captura con una vista más clara.</p></div><button class="btn btn-primary" onclick="PronostixAdmin.saveSettings()">Guardar configuración</button></div>
+      <div class="settings-grid mt-4">
+        <article class="settings-card settings-card-primary"><div class="settings-card-heading"><div><h3>Premios del torneo</h3><p>Configuración esperada: inscripción 200 MXN, comisión admin 10%, premios 50% / 25% / 15%. La suma total debe ser 100%.</p></div><span class="settings-badge">Premios</span></div>
+          <div class="settings-form-grid mt-3">
+            <label class="metric-input"><span>Costo de inscripción</span><input id="entryFee" class="input" type="number" min="0" value="${s.entry_fee ?? 0}"></label>
+            <label class="metric-input"><span>% comisión admin</span><input id="adminPct" class="input" type="number" min="0" max="100" value="${s.admin_percentage ?? 0}"></label>
+            <label class="metric-input"><span>% 1° lugar</span><input id="firstPct" class="input" type="number" min="0" max="100" value="${s.first_place_percentage ?? 0}"></label>
+            <label class="metric-input"><span>% 2° lugar</span><input id="secondPct" class="input" type="number" min="0" max="100" value="${s.second_place_percentage ?? 0}"></label>
+            <label class="metric-input"><span>% 3° lugar</span><input id="thirdPct" class="input" type="number" min="0" max="100" value="${s.third_place_percentage ?? 0}"></label>
+            <label class="metric-input"><span>Minutos de bloqueo</span><input id="lockMinutes" class="input" type="number" min="0" value="${s.lock_minutes_before_match ?? 1}"></label>
           </div>
-          <label class="setting-check mt-3"><input id="specialsForceUnlock" type="checkbox" ${s.specials_force_unlock ? "checked" : ""}> <span><b>Desbloqueo manual de especiales</b><small>Permite editar especiales aunque el torneo ya haya iniciado. Utilizar únicamente en situaciones excepcionales.</small></span></label>
-          <button class="btn btn-primary mt-3" onclick="PronostixAdmin.saveSettings()">Guardar configuración</button>
-        </div>
-        <div><h3 class="font-black">Torneo activo</h3><p class="text-sm text-slate-500">Úsalo solo si necesitas cambiar qué torneo ve la aplicación.</p>
-          <label>Seleccionar torneo activo<select id="activeTournament" class="input mt-2">${P.state.tournaments.map(t => `<option value="${t.id}" ${t.is_active ? "selected" : ""}>${P.esc(t.name)}</option>`).join("")}</select></label>
-          <label>Nombre del torneo activo<input id="tournamentName" class="input mt-2" value="${P.esc(P.state.activeTournament?.name || "")}"></label>
-          <div class="flex gap-2 mt-3"><button class="btn btn-primary" onclick="PronostixAdmin.setActiveTournament()">Activar torneo</button><button class="btn btn-secondary" onclick="PronostixAdmin.saveTournamentName()">Guardar nombre</button></div>
-        </div>
+          <label class="setting-check settings-unlock mt-3"><input id="specialsForceUnlock" type="checkbox" ${s.specials_force_unlock ? "checked" : ""}> <span><b>Desbloqueo manual de especiales</b><small>Permite editar especiales aunque el torneo ya haya iniciado. Utilizar únicamente en situaciones excepcionales.</small></span></label>
+          <div class="settings-actions"><button class="btn btn-primary" onclick="PronostixAdmin.saveSettings()">Guardar configuración</button></div>
+        </article>
+        <article class="settings-card"><div class="settings-card-heading"><div><h3>Torneo activo</h3><p>Úsalo solo si necesitas cambiar qué torneo ve la aplicación.</p></div><span class="settings-badge settings-badge-soft">Activo</span></div>
+          <div class="settings-stack mt-3">
+            <label class="metric-input"><span>Seleccionar torneo activo</span><select id="activeTournament" class="input">${P.state.tournaments.map(t => `<option value="${t.id}" ${t.is_active ? "selected" : ""}>${P.esc(t.name)}</option>`).join("")}</select></label>
+            <label class="metric-input"><span>Nombre del torneo activo</span><input id="tournamentName" class="input" value="${P.esc(P.state.activeTournament?.name || "")}"></label>
+          </div>
+          <div class="settings-actions"><button class="btn btn-primary" onclick="PronostixAdmin.setActiveTournament()">Activar torneo</button><button class="btn btn-secondary" onclick="PronostixAdmin.saveTournamentName()">Guardar nombre</button></div>
+        </article>
       </div>
     </section>`;
   }
@@ -293,15 +295,23 @@
     })).sort((a, b) => a.groupName.localeCompare(b.groupName, "es", { numeric: true }));
   }
 
+  function standingsGoalDiffClass(value) {
+    const n = Number(value || 0);
+    if (n > 0) return "positive";
+    if (n < 0) return "negative";
+    return "neutral";
+  }
+
   function renderLocalStandings(matches) {
     const groups = buildLocalStandings(matches);
-    if (!groups.length) return `<details class="technical-details mt-3"><summary>Tabla de posiciones local</summary><p class="text-sm text-slate-500 mt-2">Aún no hay partidos finalizados con marcador para calcular posiciones.</p></details>`;
-    return `<details class="technical-details mt-3" open><summary>Tabla de posiciones local</summary><p class="text-sm text-slate-600 mt-2">Calculada con los marcadores guardados en Supabase. Es visual y no modifica rankings ni premios.</p>${groups.map(group => `<h4 class="font-black mt-3">${P.esc(group.groupName)}</h4><div class="table-wrap mt-2"><table class="data-table"><thead><tr><th>Equipo</th><th>Pts</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th></tr></thead><tbody>${group.rows.map(row => `<tr><td>${P.esc(row.team?.name || "—")}</td><td>${row.points}</td><td>${row.played}</td><td>${row.won}</td><td>${row.drawn}</td><td>${row.lost}</td><td>${row.goalsFor}</td><td>${row.goalsAgainst}</td><td>${row.goalDifference}</td></tr>`).join("")}</tbody></table></div>`).join("")}</details>`;
+    if (!groups.length) return `<details class="technical-details standings-shell mt-3"><summary><span>Tabla de posiciones local</span><small>Sin marcadores</small></summary><p class="standings-note mt-2">Aún no hay partidos finalizados con marcador para calcular posiciones.</p></details>`;
+    const finishedGroups = groups.reduce((total, group) => total + group.rows.filter(row => row.played > 0).length, 0);
+    return `<details class="technical-details standings-shell mt-3" open><summary><span>Tabla de posiciones local</span><small>${finishedGroups} equipos con PJ</small></summary><p class="standings-note mt-2">Calculada con los marcadores guardados en Supabase. Es visual y no modifica rankings ni premios.</p><div class="standings-grid mt-3">${groups.map(group => `<article class="standings-card"><div class="standings-card-title"><h4>${P.esc(group.groupName)}</h4><span>${group.rows.reduce((sum, row) => sum + row.played, 0)} PJ acumulados</span></div><div class="table-wrap standings-wrap"><table class="data-table standings-table"><thead><tr><th>Equipo</th><th>Pts</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th></tr></thead><tbody>${group.rows.map((row, index) => `<tr><td><span class="team-cell"><b class="team-rank">${index + 1}</b><span>${P.esc(row.team?.name || "—")}</span></span></td><td class="points-cell">${row.points}</td><td>${row.played}</td><td>${row.won}</td><td>${row.drawn}</td><td>${row.lost}</td><td>${row.goalsFor}</td><td>${row.goalsAgainst}</td><td><span class="goal-diff ${standingsGoalDiffClass(row.goalDifference)}">${row.goalDifference}</span></td></tr>`).join("")}</tbody></table></div></article>`).join("")}</div></details>`;
   }
 
   function renderGroupsTablePlaceholder() {
     const url = WorldCup26.WORLD_CUP_26_GROUPS_URL || "https://worldcup26.ir/get/groups";
-    return `<details class="technical-details mt-3"><summary>Tabla visual de grupos worldcup26.ir</summary><p class="text-sm text-slate-600 mt-2">Endpoint configurado: <code>${P.esc(url)}</code>. Esta tabla es solo visual/operativa y no modifica rankings ni premios.</p><button class="btn btn-secondary mt-2" onclick="PronostixAdmin.loadWorldCup26Groups()">Cargar tabla de grupos</button><div id="worldcup26GroupsTable" class="table-wrap mt-3"></div></details>`;
+    return `<details class="technical-details standings-shell worldcup-groups-shell mt-3"><summary><span>Tabla visual de grupos worldcup26.ir</span><small>Vista externa</small></summary><p class="standings-note mt-2">Endpoint configurado: <code>${P.esc(url)}</code>. Esta tabla es solo visual/operativa y no modifica rankings ni premios.</p><button class="btn btn-secondary mt-2" onclick="PronostixAdmin.loadWorldCup26Groups()">Cargar tabla de grupos</button><div id="worldcup26GroupsTable" class="table-wrap mt-3"></div></details>`;
   }
 
   function groupTeamDisplayName(team) {
@@ -319,10 +329,13 @@
 
   function renderGroupsTable(groups) {
     if (!groups.length) return `<p class="text-sm text-slate-500">El endpoint no devolvió grupos para mostrar.</p>`;
-    return `<table class="data-table"><thead><tr><th>Grupo</th><th>Equipo</th><th>Pts</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th></tr></thead><tbody>${groups.map(group => {
+    return `<table class="data-table standings-table worldcup-groups-table"><thead><tr><th>Grupo</th><th>Equipo</th><th>Pts</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th></tr></thead><tbody>${groups.map(group => {
       const groupName = WorldCup26.groupLabel ? WorldCup26.groupLabel(group.group || group.name || group.group_name) : `Grupo ${group.group || ""}`;
       const teams = Array.isArray(group.teams) ? group.teams : Array.isArray(group.table) ? group.table : Array.isArray(group.standings) ? group.standings : [group];
-      return teams.map(team => `<tr><td>${P.esc(groupName)}</td><td>${P.esc(groupTeamDisplayName(team))}</td><td>${P.esc(team.pts ?? team.points ?? "—")}</td><td>${P.esc(team.played ?? team.mp ?? team.p ?? "—")}</td><td>${P.esc(team.win ?? team.w ?? "—")}</td><td>${P.esc(team.draw ?? team.d ?? "—")}</td><td>${P.esc(team.loss ?? team.l ?? "—")}</td><td>${P.esc(team.gf ?? team.goals_for ?? "—")}</td><td>${P.esc(team.ga ?? team.goals_against ?? "—")}</td><td>${P.esc(team.gd ?? team.goal_difference ?? "—")}</td></tr>`).join("");
+      return teams.map((team, index) => {
+        const gd = team.gd ?? team.goal_difference ?? "—";
+        return `<tr><td><span class="group-pill">${P.esc(groupName)}</span></td><td><span class="team-cell"><b class="team-rank">${index + 1}</b><span>${P.esc(groupTeamDisplayName(team))}</span></span></td><td class="points-cell">${P.esc(team.pts ?? team.points ?? "—")}</td><td>${P.esc(team.played ?? team.mp ?? team.p ?? "—")}</td><td>${P.esc(team.win ?? team.w ?? "—")}</td><td>${P.esc(team.draw ?? team.d ?? "—")}</td><td>${P.esc(team.loss ?? team.l ?? "—")}</td><td>${P.esc(team.gf ?? team.goals_for ?? "—")}</td><td>${P.esc(team.ga ?? team.goals_against ?? "—")}</td><td><span class="goal-diff ${standingsGoalDiffClass(gd)}">${P.esc(gd)}</span></td></tr>`;
+      }).join("");
     }).join("")}</tbody></table>`;
   }
 
@@ -557,7 +570,7 @@
 
   function teamNameMatches(externalName, team) {
     return WorldCup26.teamNameMatches ? WorldCup26.teamNameMatches(externalName, team) : normalizeExternalText(externalName) === normalizeExternalText(team?.name);
-  }	    
+  }
 
   function teamIdMatches(externalTeamId, team) {
     return WorldCup26.teamIdMatches ? WorldCup26.teamIdMatches(externalTeamId, team) : false;
@@ -818,4 +831,4 @@
   }
 
   window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, syncResultsFromApi, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest, saveCollapseState, loadWorldCup26Groups, _internals: { buildResultsApiUrl, buildFetchUrls, fetchJsonWithFallback, resolveExternalEvent, teamNameMatches, normalizeExternalText, apiMatchItems, groupItems, isApiItemFinished, buildLocalStandings } };
-}());	      
+}());	  
