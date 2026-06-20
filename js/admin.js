@@ -161,7 +161,7 @@
         <label>Proveedor/API especiales<input id="specialsApiProvider" class="input" value="${P.esc(s.special_results_api_provider || "")}" placeholder="Opcional a futuro"></label>
       </div>
       <div class="flex gap-2 mt-3"><button class="btn btn-secondary" onclick="PronostixAdmin.saveAutomationSettings()">Guardar API</button><button class="btn btn-primary" onclick="PronostixAdmin.syncResultsFromApi()" ${s.results_api_enabled ? "" : "disabled"}>Sincronizar resultados desde API</button></div>
-      <details class="technical-details mt-3" open><summary>Proveedor recomendado</summary><p class="text-sm text-slate-600 mt-2">Proveedor: <b>worldcup26.ir</b>. Pronostix lee <code>/get/games</code>, traduce IDs y nombres desde <code>js/worldcup26-translator.js</code>, y actualiza solo marcadores/estado de partidos. Rankings y premios no se tocan.</p><p class="text-sm text-slate-500 mt-2">Sugerencia operativa: conservar este botón para sincronización manual y, cuando exista un backend/job seguro, programarlo cada 30 minutos usando el mismo endpoint.</p></details>
+      <details class="technical-details mt-3" open><summary>Proveedor recomendado</summary><p class="text-sm text-slate-600 mt-2">Proveedor: <b>worldcup26.ir</b>. Pronostix lee <code>/get/games</code>, traduce IDs y nombres desde <code>js/worldcup26-translator.js</code>, y actualiza solo marcadores/estado de partidos. Rankings y premios no se tocan.</p><p class="text-sm text-slate-500 mt-2">Si el navegador bloquea CORS, Pronostix intenta una lectura de respaldo por proxy público para que el botón también actualice la bitácora operativa. Para producción estable, lo ideal es mover este fetch a una Edge Function/job propio cada 30 minutos.</p></details>
     </section>`;
   }
 
@@ -255,9 +255,7 @@
     const target = document.getElementById("worldcup26GroupsTable");
     if (target) target.innerHTML = `<p class="text-sm text-slate-500">Cargando grupos...</p>`;
     try {
-      const response = await fetch(WorldCup26.WORLD_CUP_26_GROUPS_URL || "https://worldcup26.ir/get/groups", { headers: { Accept: "application/json" } });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const payload = await response.json();
+      const { payload } = await fetchJsonWithFallback(WorldCup26.WORLD_CUP_26_GROUPS_URL || "https://worldcup26.ir/get/groups");
       if (target) target.innerHTML = renderGroupsTable(groupItems(payload));
     } catch (error) {
       if (target) target.innerHTML = `<p class="text-sm text-red-600">No se pudo cargar la tabla visual: ${P.esc(error.message)}</p>`;
@@ -526,6 +524,27 @@
     return source;
   }
 
+  function buildFetchUrls(url, settings = P.state.settings || {}) {
+    const urls = [url];
+    const isDirectWorldCup26 = isWorldCup26Provider(settings) && /^https?:\/\/worldcup26\.ir\//i.test(url);
+    if (isDirectWorldCup26 && typeof WorldCup26.proxiedUrl === "function") urls.push(WorldCup26.proxiedUrl(url));
+    return [...new Set(urls.filter(Boolean))];
+  }
+
+  async function fetchJsonWithFallback(url, settings = P.state.settings || {}) {
+    const errors = [];
+    for (const candidateUrl of buildFetchUrls(url, settings)) {
+      try {
+        const response = await fetch(candidateUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return { payload: await response.json(), url: candidateUrl };
+      } catch (error) {
+        errors.push(`${candidateUrl}: ${error.message}`);
+      }
+    }
+    throw new Error(errors.join(" | ") || "No fue posible leer JSON del proveedor.");
+  }
+
   function resolveExternalEvent(item, matches) {
     const scores = externalScores(item);
     if (!scores) return null;
@@ -575,11 +594,10 @@
 
     let payload;
     try {
-      const response = await fetch(url, { headers: { Accept: "application/json" } });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      payload = await response.json();
+      const result = await fetchJsonWithFallback(url, settings);
+      payload = result.payload;
     } catch (error) {
-      await logApiSync({ status: "ERROR", message: "Falló la lectura de la API de resultados.", records_checked: 0, records_changed: 0, error_message: error.message });
+      await logApiSync({ status: "ERROR", message: "Falló la lectura de la API de resultados.", records_checked: 0, records_changed: 0, error_message: error.message, raw_summary: { url, attempted_urls: buildFetchUrls(url, settings) } });
       return P.toast("No fue posible leer la API de resultados. Conserva la captura manual como respaldo.", false);
     }
 
@@ -606,7 +624,7 @@
     }
 
     const status = errors.length ? "ERROR" : skipped ? "PARTIAL" : "OK";
-    await logApiSync({ status, message: `Sincronización API: ${changed} actualizados, ${skipped} omitidos.`, records_checked: items.length, records_changed: changed, error_message: errors.join(" | ") || null, raw_summary: { skipped, provider: settings.results_api_provider || null, url } });
+    await logApiSync({ status, message: `Sincronización API: ${changed} actualizados, ${skipped} omitidos.`, records_checked: items.length, records_changed: changed, error_message: errors.join(" | ") || null, raw_summary: { skipped, provider: settings.results_api_provider || null, url, attempted_urls: buildFetchUrls(url, settings) } });
     P.toast(`Sincronización API: ${changed} actualizados, ${skipped} omitidos.`, !errors.length);
     await Data.getTournamentData(true);
     renderAdmin();
@@ -624,7 +642,7 @@
 
   async function saveTournamentName() {
     const name = P.val("tournamentName");
-    if (!name) return P.toast("El nombre del torneo no puede estar vacío.");
+    if (!name) return P.toast("El nombre del torneo no puede estar vacío.", false);
     const { error } = await P.sb.from("tournaments").update({ name }).eq("id", P.state.activeTournament.id);
     await Data.loadBase();
     P.toast(error ? error.message : "Nombre del torneo guardado.", !error);
@@ -702,5 +720,5 @@
     P.toast(error ? error.message : "Resultados especiales guardados.", !error);
   }
 
-  window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, syncResultsFromApi, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest, saveCollapseState, loadWorldCup26Groups, _internals: { buildResultsApiUrl, resolveExternalEvent, teamNameMatches, normalizeExternalText, apiMatchItems, groupItems } };
+  window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, syncResultsFromApi, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest, saveCollapseState, loadWorldCup26Groups, _internals: { buildResultsApiUrl, buildFetchUrls, fetchJsonWithFallback, resolveExternalEvent, teamNameMatches, normalizeExternalText, apiMatchItems, groupItems } };
 }());

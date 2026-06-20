@@ -134,6 +134,7 @@ Estado actual:
 - Para partidos se usa https://worldcup26.ir/get/games; si el campo queda vacío y el proveedor es worldcup26, Pronostix usa ese endpoint por defecto.
 - La traducción de IDs/nombres vive en js/worldcup26-translator.js para evitar hardcodear alias dentro de Administración.
 - Partidos que no empatan de forma segura se omiten y quedan para revisión manual.
+- Si GitHub Pages bloquea la lectura directa por CORS, el frontend intenta un proxy público como respaldo; para producción estable se recomienda una Supabase Edge Function o job propio.
 
 ## GitHub Pages
 
@@ -214,6 +215,6 @@ Configuración en Administración:
 - Endpoint de partidos: https://worldcup26.ir/get/games
 - Tabla visual de grupos: https://worldcup26.ir/get/groups
 
-Pronostix mantiene el botón de sincronización manual y puede reutilizarse después en un job programado, por ejemplo cada 30 minutos, sin tocar rankings ni premios.
+Pronostix mantiene el botón de sincronización manual y puede reutilizarse después en un job programado, por ejemplo cada 30 minutos, sin tocar rankings ni premios. Si el navegador bloquea CORS, el frontend intenta respaldo por proxy público; para operación estable conviene mover ese fetch a una Supabase Edge Function/job propio.
 
 La captura manual permanece disponible como respaldo.
