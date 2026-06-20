@@ -34,6 +34,7 @@ assert.strictEqual(
 
 assert(internals.teamNameMatches('Mexico', { name: 'México', code: 'MEX' }), 'Empata México/Mexico sin acentos');
 assert(internals.teamNameMatches('United States', { name: 'Estados Unidos', code: 'USA' }), 'Empata Estados Unidos/United States');
+assert.strictEqual(context.window.PronostixWorldCup26.teamIdMatches('1', { id: '20260000-0000-0000-0000-000000000201', name: 'México' }), true, 'Permite probar empates por IDs externos del proveedor');
 
 const match = {
   id: 'match-1',
@@ -56,5 +57,8 @@ assert(resolved, 'Resuelve evento externo por equipos + fecha');
 assert.strictEqual(resolved.match.id, 'match-1', 'Devuelve el partido interno correcto');
 assert.strictEqual(resolved.homeScore, 2, 'Mapea marcador local');
 assert.strictEqual(resolved.awayScore, 1, 'Mapea marcador visitante');
+
+assert.strictEqual(internals.isApiItemFinished({ finished: 'FALSE', home_score: '0', away_score: '0' }), false, 'Omite partidos no finalizados aunque traigan ceros');
+assert.strictEqual(internals.isApiItemFinished({ finished: 'TRUE' }), true, 'Acepta partidos finalizados');
 
 console.log('API provider mapping: OK');

@@ -3,6 +3,7 @@
   const WORLD_CUP_26_GROUPS_URL = "https://worldcup26.ir/get/groups";
   const WORLD_CUP_26_CORS_PROXY_URL = "https://api.allorigins.win/raw?url=";
   const SUPABASE_2026_TEAM_PREFIX = "20260000-0000-0000-0000-0000000002";
+  const TRUST_TEAM_ID_MAP = true;
 
   const TEAM_ID_MAP = Object.freeze(Object.fromEntries(
     Array.from({ length: 48 }, (_, index) => {
@@ -88,6 +89,7 @@
   }
 
   function teamIdMatches(externalTeamId, team) {
+    if (!TRUST_TEAM_ID_MAP) return false;
     const mappedId = supabaseTeamId(externalTeamId);
     return Boolean(mappedId && team?.id === mappedId);
   }
@@ -101,5 +103,5 @@
     return `${WORLD_CUP_26_CORS_PROXY_URL}${encodeURIComponent(url)}`;
   }
 
-  window.PronostixWorldCup26 = { WORLD_CUP_26_GAMES_URL, WORLD_CUP_26_GROUPS_URL, WORLD_CUP_26_CORS_PROXY_URL, TEAM_ID_MAP, TEAM_ALIASES, normalizeText, supabaseTeamId, teamNameMatches, teamIdMatches, groupLabel, proxiedUrl };
+  window.PronostixWorldCup26 = { WORLD_CUP_26_GAMES_URL, WORLD_CUP_26_GROUPS_URL, WORLD_CUP_26_CORS_PROXY_URL, TEAM_ID_MAP, TRUST_TEAM_ID_MAP, TEAM_ALIASES, normalizeText, supabaseTeamId, teamNameMatches, teamIdMatches, groupLabel, proxiedUrl };
 }());

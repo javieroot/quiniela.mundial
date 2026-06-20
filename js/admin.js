@@ -214,7 +214,7 @@
   }
 
   function hasMatchScore(match) {
-    return match.home_score != null && match.away_score != null;
+    return match.status === "FINISHED" && match.home_score != null && match.away_score != null;
   }
 
   function renderResultRow(match) {
@@ -235,6 +235,68 @@
     const rounds = groups.filter(group => group.type !== "group");
     return `${groupStage.length ? `<h3 class="group-section-heading">Fase de grupos</h3>${groupStage.map(renderResultGroup).join("")}` : ""}
       ${rounds.length ? `<h3 class="group-section-heading">Eliminatorias / fases</h3>${rounds.map(renderResultGroup).join("")}` : ""}`;
+  }
+
+
+  function emptyStanding(team) {
+    return { team, played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, goalDifference: 0, points: 0 };
+  }
+
+  function buildLocalStandings(matches) {
+    const groups = new Map();
+    matches.filter(match => /^grupo\s+/i.test(String(match.group_name || "")) && hasMatchScore(match) && match.status === "FINISHED").forEach(match => {
+      const groupName = displayStageName(normalizeStageName(match.group_name));
+      if (!groups.has(groupName)) groups.set(groupName, new Map());
+      const rows = groups.get(groupName);
+      const homeId = match.home_team?.id || match.home_team_id;
+      const awayId = match.away_team?.id || match.away_team_id;
+      if (!rows.has(homeId)) rows.set(homeId, emptyStanding(match.home_team || { id: homeId, name: "Local" }));
+      if (!rows.has(awayId)) rows.set(awayId, emptyStanding(match.away_team || { id: awayId, name: "Visita" }));
+      const home = rows.get(homeId);
+      const away = rows.get(awayId);
+      const homeScore = Number(match.home_score);
+      const awayScore = Number(match.away_score);
+
+      home.played += 1;
+      away.played += 1;
+      home.goalsFor += homeScore;
+      home.goalsAgainst += awayScore;
+      away.goalsFor += awayScore;
+      away.goalsAgainst += homeScore;
+
+      if (homeScore > awayScore) {
+        home.won += 1;
+        away.lost += 1;
+        home.points += 3;
+      } else if (homeScore < awayScore) {
+        away.won += 1;
+        home.lost += 1;
+        away.points += 3;
+      } else {
+        home.drawn += 1;
+        away.drawn += 1;
+        home.points += 1;
+        away.points += 1;
+      }
+
+      home.goalDifference = home.goalsFor - home.goalsAgainst;
+      away.goalDifference = away.goalsFor - away.goalsAgainst;
+    });
+    return [...groups.entries()].map(([groupName, rows]) => ({
+      groupName,
+      rows: [...rows.values()].sort((a, b) =>
+        b.points - a.points
+        || b.goalDifference - a.goalDifference
+        || b.goalsFor - a.goalsFor
+        || a.team.name.localeCompare(b.team.name, "es")
+      )
+    })).sort((a, b) => a.groupName.localeCompare(b.groupName, "es", { numeric: true }));
+  }
+
+  function renderLocalStandings(matches) {
+    const groups = buildLocalStandings(matches);
+    if (!groups.length) return `<details class="technical-details mt-3"><summary>Tabla de posiciones local</summary><p class="text-sm text-slate-500 mt-2">Aún no hay partidos finalizados con marcador para calcular posiciones.</p></details>`;
+    return `<details class="technical-details mt-3" open><summary>Tabla de posiciones local</summary><p class="text-sm text-slate-600 mt-2">Calculada con los marcadores guardados en Supabase. Es visual y no modifica rankings ni premios.</p>${groups.map(group => `<h4 class="font-black mt-3">${P.esc(group.groupName)}</h4><div class="table-wrap mt-2"><table class="data-table"><thead><tr><th>Equipo</th><th>Pts</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th></tr></thead><tbody>${group.rows.map(row => `<tr><td>${P.esc(row.team?.name || "—")}</td><td>${row.points}</td><td>${row.played}</td><td>${row.won}</td><td>${row.drawn}</td><td>${row.lost}</td><td>${row.goalsFor}</td><td>${row.goalsAgainst}</td><td>${row.goalDifference}</td></tr>`).join("")}</tbody></table></div>`).join("")}</details>`;
   }
 
   function renderGroupsTablePlaceholder() {
@@ -269,6 +331,7 @@
     const groups = groupMatches(matches, hasMatchScore);
     return `<section class="admin-block"><h3 class="text-xl font-black">Resultados de partidos</h3><p class="text-slate-600 mt-1">Captura final del marcador y marca el partido como finalizado. La captura manual es la fuente principal.</p>
       ${renderProgressSummary("Resultados capturados", captured, matches.length, [{ label: "Partidos finalizados", value: finished }, { label: "Partidos pendientes", value: pending }])}
+      ${renderLocalStandings(matches)}
       <div id="worldcup26-groups-preview">${renderGroupsTablePlaceholder()}</div>
       <div class="match-groups mt-3">${renderResultGroups(groups)}</div></section>`;
   }
@@ -502,6 +565,14 @@
     return Math.abs(eventDate.getTime() - new Date(match.kickoff_at).getTime()) <= 36 * 60 * 60 * 1000;
   }
 
+
+  function isApiItemFinished(item) {
+    const value = pickDefined(item.finished, item.is_finished, item.status, item.strStatus);
+    if (value === undefined || value === null || value === "") return false;
+    const status = normalizeExternalText(value);
+    return ["true", "finished", "match finished", "final", "ft", "full time"].includes(status);
+  }
+
   function externalScores(item) {
     const homeScore = Number(pickDefined(item.home_score, item.homeScore, item.home, item.intHomeScore, item.intHomePoints));
     const awayScore = Number(pickDefined(item.away_score, item.awayScore, item.away, item.intAwayScore, item.intAwayPoints));
@@ -608,6 +679,10 @@
     const errors = [];
 
     for (const item of items) {
+      if (!isApiItemFinished(item)) {
+        skipped += 1;
+        continue;
+      }
       const resolved = resolveExternalEvent(item, matches);
       if (!resolved) {
         skipped += 1;
@@ -720,5 +795,5 @@
     P.toast(error ? error.message : "Resultados especiales guardados.", !error);
   }
 
-  window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, syncResultsFromApi, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest, saveCollapseState, loadWorldCup26Groups, _internals: { buildResultsApiUrl, buildFetchUrls, fetchJsonWithFallback, resolveExternalEvent, teamNameMatches, normalizeExternalText, apiMatchItems, groupItems } };
+  window.PronostixAdmin = { renderAdmin, saveSettings, saveAutomationSettings, syncResultsFromApi, setActiveTournament, saveTournamentName, savePayment, saveRole, saveMatchResult, saveSpecialResults, resetUserEntries, resetTournamentResults, resetFullTest, saveCollapseState, loadWorldCup26Groups, _internals: { buildResultsApiUrl, buildFetchUrls, fetchJsonWithFallback, resolveExternalEvent, teamNameMatches, normalizeExternalText, apiMatchItems, groupItems, isApiItemFinished, buildLocalStandings } };
 }());
