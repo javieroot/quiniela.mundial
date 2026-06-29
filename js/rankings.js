@@ -5,8 +5,7 @@
 
   function matchPoints(prediction, match) {
     if (
-      match.status !== "FINISHED"
-      || prediction.home_score == null
+      prediction.home_score == null
       || prediction.away_score == null
       || match.home_score == null
       || match.away_score == null
@@ -147,11 +146,11 @@
           <tr>
             <th>Posición</th>
             <th>Usuario</th>
-            <th>Partidos</th>
-            <th>Especiales</th>
-            <th>Total</th>
-            <th>Exactos</th>
-            <th>Resultados</th>
+            <th>Pts partidos</th>
+            <th>Pts especiales</th>
+            <th>Total pts</th>
+            <th>Marcadores exactos</th>
+            <th>Resultados acertados</th>
             ${showPaid ? "<th>Pago</th>" : ""}
             <th>Última modificación</th>
           </tr>
@@ -186,6 +185,7 @@
         </div>
         <span class="pill">Los empates comparten posición y premio.</span>
       </div>
+      <p class="text-sm text-slate-600 mt-3"><b>Pts partidos</b> son puntos por marcadores pronosticados, no cantidad de partidos. <b>Marcadores exactos</b> es la cantidad de partidos donde atinaste el marcador exacto y <b>Resultados acertados</b> es la cantidad de partidos donde atinaste ganador/empate sin marcador exacto.</p>
     </section>
 
     ${renderPrizeSummary(officialOnly ? "Premios reales - Oficial" : "Premios simulados - General", prizes)}

@@ -119,6 +119,34 @@ async function assertTemporarySpecialPoints() {
   console.log('Especiales temporales en ranking: OK');
 }
 
+async function assertScoredMatchesCountEvenIfStatusScheduled() {
+  const rankingData = {
+    profiles: [
+      { id: 'usuario2026', username: 'usuario2026', display_name: 'Usuario Demo', payment_status: 'PAID' }
+    ],
+    predictions: [{
+      user_id: 'usuario2026',
+      match_id: 'partido-con-marcador',
+      home_score: 1,
+      away_score: 0,
+      updated_at: '2026-06-29T00:00:00Z'
+    }],
+    specialPredictions: [],
+    specialResults: null,
+    matches: [{
+      id: 'partido-con-marcador',
+      status: 'SCHEDULED',
+      home_score: 1,
+      away_score: 0
+    }]
+  };
+  const rankings = loadRankings({ settings, rankingData });
+  const rows = await rankings.calculateRows(false);
+  assert.strictEqual(rows[0].match_points, 3, 'Ranking debe contar partidos capturados con marcador aunque status siga SCHEDULED');
+  assert.strictEqual(rows[0].exacts, 1, 'Ranking debe sumar exacto con marcador capturado');
+  console.log('Ranking con marcador capturado sin FINISHED: OK');
+}
+
 async function run() {
   assertPrizePlan('Caso 1: un solo ganador', [row('u1', 1), row('u2', 2), row('u3', 3)], 3, [
     { place: 1, winners: 1, prize: 300, each: 300 },
@@ -158,6 +186,7 @@ async function run() {
 
   await assertRankingFilters();
   await assertTemporarySpecialPoints();
+  await assertScoredMatchesCountEvenIfStatusScheduled();
 }
 
 run().catch(error => {

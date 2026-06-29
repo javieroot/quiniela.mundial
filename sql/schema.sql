@@ -37,6 +37,8 @@ create table public.players(
   tournament_id uuid not null references public.tournaments(id) on delete cascade,
   team_id uuid references public.teams(id),
   name text not null,
+  position text not null default 'FIELD' check (position in ('GK','FIELD')),
+  is_special_candidate boolean not null default true,
   unique(tournament_id,name)
 );
 

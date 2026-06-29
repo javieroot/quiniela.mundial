@@ -364,13 +364,16 @@
 
   function renderSpecialResults(teams, players, result) {
     const teamsById = Object.fromEntries(teams.map(team => [team.id, team]));
+    const specialPlayers = players.filter(player => player.is_special_candidate !== false);
+    const goalkeepers = specialPlayers.filter(player => player.position === "GK");
+    const selectableGoalkeepers = goalkeepers.length ? goalkeepers : specialPlayers;
     return `<section class="admin-block"><h3 class="text-xl font-black">Resultados especiales</h3><p class="text-slate-600 mt-1">Captura campeón, subcampeón, tercer lugar, goleador y los especiales temporales cuando sean oficiales. La captura manual sigue siendo el respaldo operativo.</p><div class="grid md:grid-cols-3 gap-3 mt-3">
       ${UI.autocompleteField({ id: "srChampion", label: "Campeón", items: teams, selected: result?.champion_team_id, placeholder: "Ej. México", help: "Busca y selecciona el equipo oficial." })}
       ${UI.autocompleteField({ id: "srRunner", label: "Subcampeón", items: teams, selected: result?.runner_up_team_id, placeholder: "Ej. Francia", help: "Busca y selecciona el equipo oficial." })}
       ${UI.autocompleteField({ id: "srThird", label: "Tercer lugar", items: teams, selected: result?.third_place_team_id, placeholder: "Ej. Inglaterra", help: "Busca y selecciona el equipo oficial." })}
-      ${UI.autocompleteField({ id: "srScorer", label: "Goleador", items: players, selected: result?.top_scorer_player_id, placeholder: "Ej. Mbappé, Kane, Haaland", labelFn: player => playerLabel(player, teamsById), help: "Selecciona un jugador existente con su país." })}
-      ${UI.autocompleteField({ id: "srBestPlayer", label: "Mejor jugador", items: players, selected: result?.best_player_id, placeholder: "Ej. Mbappé, Bellingham, Messi", labelFn: player => playerLabel(player, teamsById), help: "Especial temporal. Selecciona un jugador existente." })}
-      ${UI.autocompleteField({ id: "srBestGoalkeeper", label: "Mejor portero", items: players, selected: result?.best_goalkeeper_id, placeholder: "Ej. Courtois, Martínez, Neuer", labelFn: player => playerLabel(player, teamsById), help: "Especial temporal. Selecciona un portero existente." })}
+      ${UI.autocompleteField({ id: "srScorer", label: "Goleador", items: specialPlayers, selected: result?.top_scorer_player_id, placeholder: "Ej. Mbappé, Kane, Haaland", labelFn: player => playerLabel(player, teamsById), help: "Selecciona un jugador existente con su país." })}
+      ${UI.autocompleteField({ id: "srBestPlayer", label: "Mejor jugador", items: specialPlayers, selected: result?.best_player_id, placeholder: "Ej. Mbappé, Bellingham, Messi", labelFn: player => playerLabel(player, teamsById), help: "Especial temporal. Selecciona un jugador existente." })}
+      ${UI.autocompleteField({ id: "srBestGoalkeeper", label: "Mejor portero", items: selectableGoalkeepers, selected: result?.best_goalkeeper_id, placeholder: "Ej. Courtois, Martínez, Neuer", labelFn: player => playerLabel(player, teamsById), help: "Especial temporal. Selecciona un portero existente." })}
     </div><button class="btn btn-primary mt-3" onclick="PronostixAdmin.saveSpecialResults()">Guardar resultados especiales</button></section>`;
   }
 
@@ -807,6 +810,9 @@
 
   async function saveSpecialResults() {
     const { teams, players } = await Data.getTournamentData();
+    const specialPlayers = players.filter(player => player.is_special_candidate !== false);
+    const goalkeepers = specialPlayers.filter(player => player.position === "GK");
+    const selectableGoalkeepers = goalkeepers.length ? goalkeepers : specialPlayers;
     const champion = P.val("srChampion");
     const runner = P.val("srRunner");
     const third = P.val("srThird");
@@ -814,7 +820,7 @@
     const bestPlayer = P.val("srBestPlayer");
     const bestGoalkeeper = P.val("srBestGoalkeeper");
     if (!champion || !runner || !third || !scorer || !bestPlayer || !bestGoalkeeper) return P.toast("Selecciona campeón, subcampeón, tercer lugar, goleador, mejor jugador y mejor portero desde la lista antes de guardar resultados especiales.", false);
-    if (![champion, runner, third].every(id => hasId(teams, id)) || ![scorer, bestPlayer, bestGoalkeeper].every(id => hasId(players, id))) return P.toast("Selecciona únicamente equipos y jugadores existentes de la lista.", false);
+    if (![champion, runner, third].every(id => hasId(teams, id)) || ![scorer, bestPlayer].every(id => hasId(specialPlayers, id)) || !hasId(selectableGoalkeepers, bestGoalkeeper)) return P.toast("Selecciona únicamente equipos y jugadores existentes de la lista. Mejor portero solo acepta porteros.", false);
     const podium = [champion, runner, third];
     if (new Set(podium).size !== podium.length) return P.toast("No repitas equipos en campeón/subcampeón/tercer lugar.", false);
     const payload = {

@@ -1,7 +1,7 @@
 -- Pronostix v2 - seed Mundial FIFA 2026, ronda de 32
 -- Información verificada el 2026-06-28: la fase de grupos terminó y los 16 cruces de ronda de 32 ya están definidos.
 -- Fuentes consultadas: FIFA Match Centre / calendario oficial para sedes y horarios UTC; FOX y Economic Times para confirmación de cruces.
--- Nota operativa: Match 73 ya se incluye como FINALIZADO según reportes del 2026-06-28 (Sudáfrica 0-1 Canadá).
+-- Nota operativa: Match 73 se inserta como FINALIZADO si no existe. En re-ejecuciones se conservan marcadores/status ya capturados.
 
 begin;
 
@@ -30,9 +30,12 @@ on conflict (id) do update set
   group_name = excluded.group_name,
   stadium = excluded.stadium,
   city = excluded.city,
-  home_score = excluded.home_score,
-  away_score = excluded.away_score,
-  status = excluded.status,
+  home_score = coalesce(public.matches.home_score, excluded.home_score),
+  away_score = coalesce(public.matches.away_score, excluded.away_score),
+  status = case
+    when public.matches.status = 'FINISHED' then public.matches.status
+    else excluded.status
+  end,
   updated_at = now();
 
 commit;
