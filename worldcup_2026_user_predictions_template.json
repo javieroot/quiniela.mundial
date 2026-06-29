@@ -1,0 +1,723 @@
+{
+  "tournament_id": "20260000-0000-0000-0000-000000000001",
+  "tournament": "world_cup_2026",
+  "user": {
+    "id": "49344ade-d884-4fa8-9bf4-93a2b15ae650",
+    "username": "javieroot",
+    "display_name": "Javier Nieto"
+  },
+  "fields": [
+    "match_id",
+    "match_number",
+    "home_team",
+    "away_team",
+    "home_score",
+    "away_score"
+  ],
+  "predictions": [
+    {
+      "match_id": "20260000-0000-0000-0000-000000000401",
+      "match_number": 1,
+      "home_team": "México",
+      "away_team": "Sudáfrica",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000402",
+      "match_number": 2,
+      "home_team": "Corea del Sur",
+      "away_team": "Chequia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000403",
+      "match_number": 3,
+      "home_team": "Canadá",
+      "away_team": "Bosnia y Herzegovina",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000404",
+      "match_number": 4,
+      "home_team": "Estados Unidos",
+      "away_team": "Paraguay",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000405",
+      "match_number": 5,
+      "home_team": "Catar",
+      "away_team": "Suiza",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000406",
+      "match_number": 6,
+      "home_team": "Brasil",
+      "away_team": "Marruecos",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000407",
+      "match_number": 7,
+      "home_team": "Haití",
+      "away_team": "Escocia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000408",
+      "match_number": 8,
+      "home_team": "Australia",
+      "away_team": "Turquía",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000409",
+      "match_number": 9,
+      "home_team": "Costa de Marfil",
+      "away_team": "Ecuador",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000410",
+      "match_number": 10,
+      "home_team": "Alemania",
+      "away_team": "Curazao",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000411",
+      "match_number": 11,
+      "home_team": "Países Bajos",
+      "away_team": "Japón",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000412",
+      "match_number": 12,
+      "home_team": "Suecia",
+      "away_team": "Túnez",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000413",
+      "match_number": 13,
+      "home_team": "Irán",
+      "away_team": "Nueva Zelanda",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000414",
+      "match_number": 14,
+      "home_team": "Bélgica",
+      "away_team": "Egipto",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000415",
+      "match_number": 15,
+      "home_team": "Arabia Saudita",
+      "away_team": "Uruguay",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000416",
+      "match_number": 16,
+      "home_team": "España",
+      "away_team": "Cabo Verde",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000417",
+      "match_number": 17,
+      "home_team": "Francia",
+      "away_team": "Senegal",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000418",
+      "match_number": 18,
+      "home_team": "Irak",
+      "away_team": "Noruega",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000419",
+      "match_number": 19,
+      "home_team": "Argentina",
+      "away_team": "Argelia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000420",
+      "match_number": 20,
+      "home_team": "Austria",
+      "away_team": "Jordania",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000421",
+      "match_number": 21,
+      "home_team": "Portugal",
+      "away_team": "RD Congo",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000422",
+      "match_number": 22,
+      "home_team": "Uzbekistán",
+      "away_team": "Colombia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000423",
+      "match_number": 23,
+      "home_team": "Ghana",
+      "away_team": "Panamá",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000424",
+      "match_number": 24,
+      "home_team": "Inglaterra",
+      "away_team": "Croacia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000425",
+      "match_number": 25,
+      "home_team": "Chequia",
+      "away_team": "Sudáfrica",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000426",
+      "match_number": 26,
+      "home_team": "México",
+      "away_team": "Corea del Sur",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000427",
+      "match_number": 27,
+      "home_team": "Suiza",
+      "away_team": "Bosnia y Herzegovina",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000428",
+      "match_number": 28,
+      "home_team": "Canadá",
+      "away_team": "Catar",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000429",
+      "match_number": 29,
+      "home_team": "Escocia",
+      "away_team": "Marruecos",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000430",
+      "match_number": 30,
+      "home_team": "Brasil",
+      "away_team": "Haití",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000431",
+      "match_number": 31,
+      "home_team": "Turquía",
+      "away_team": "Paraguay",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000432",
+      "match_number": 32,
+      "home_team": "Estados Unidos",
+      "away_team": "Australia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000433",
+      "match_number": 33,
+      "home_team": "Alemania",
+      "away_team": "Costa de Marfil",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000434",
+      "match_number": 34,
+      "home_team": "Ecuador",
+      "away_team": "Curazao",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000435",
+      "match_number": 35,
+      "home_team": "Países Bajos",
+      "away_team": "Suecia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000436",
+      "match_number": 36,
+      "home_team": "Túnez",
+      "away_team": "Japón",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000437",
+      "match_number": 37,
+      "home_team": "Bélgica",
+      "away_team": "Irán",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000438",
+      "match_number": 38,
+      "home_team": "Nueva Zelanda",
+      "away_team": "Egipto",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000439",
+      "match_number": 39,
+      "home_team": "Uruguay",
+      "away_team": "Cabo Verde",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000440",
+      "match_number": 40,
+      "home_team": "España",
+      "away_team": "Arabia Saudita",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000441",
+      "match_number": 41,
+      "home_team": "Noruega",
+      "away_team": "Senegal",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000442",
+      "match_number": 42,
+      "home_team": "Francia",
+      "away_team": "Irak",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000443",
+      "match_number": 43,
+      "home_team": "Argentina",
+      "away_team": "Austria",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000444",
+      "match_number": 44,
+      "home_team": "Jordania",
+      "away_team": "Argelia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000445",
+      "match_number": 45,
+      "home_team": "Portugal",
+      "away_team": "Uzbekistán",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000446",
+      "match_number": 46,
+      "home_team": "Colombia",
+      "away_team": "RD Congo",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000447",
+      "match_number": 47,
+      "home_team": "Inglaterra",
+      "away_team": "Ghana",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000448",
+      "match_number": 48,
+      "home_team": "Panamá",
+      "away_team": "Croacia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000449",
+      "match_number": 49,
+      "home_team": "Chequia",
+      "away_team": "México",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000450",
+      "match_number": 50,
+      "home_team": "Sudáfrica",
+      "away_team": "Corea del Sur",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000451",
+      "match_number": 51,
+      "home_team": "Suiza",
+      "away_team": "Canadá",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000452",
+      "match_number": 52,
+      "home_team": "Bosnia y Herzegovina",
+      "away_team": "Catar",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000453",
+      "match_number": 53,
+      "home_team": "Escocia",
+      "away_team": "Brasil",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000454",
+      "match_number": 54,
+      "home_team": "Marruecos",
+      "away_team": "Haití",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000455",
+      "match_number": 55,
+      "home_team": "Turquía",
+      "away_team": "Estados Unidos",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000456",
+      "match_number": 56,
+      "home_team": "Paraguay",
+      "away_team": "Australia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000457",
+      "match_number": 57,
+      "home_team": "Curazao",
+      "away_team": "Costa de Marfil",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000458",
+      "match_number": 58,
+      "home_team": "Ecuador",
+      "away_team": "Alemania",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000459",
+      "match_number": 59,
+      "home_team": "Japón",
+      "away_team": "Suecia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000460",
+      "match_number": 60,
+      "home_team": "Túnez",
+      "away_team": "Países Bajos",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000461",
+      "match_number": 61,
+      "home_team": "Egipto",
+      "away_team": "Irán",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000462",
+      "match_number": 62,
+      "home_team": "Nueva Zelanda",
+      "away_team": "Bélgica",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000463",
+      "match_number": 63,
+      "home_team": "Cabo Verde",
+      "away_team": "Arabia Saudita",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000464",
+      "match_number": 64,
+      "home_team": "Uruguay",
+      "away_team": "España",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000465",
+      "match_number": 65,
+      "home_team": "Noruega",
+      "away_team": "Francia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000466",
+      "match_number": 66,
+      "home_team": "Senegal",
+      "away_team": "Irak",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000467",
+      "match_number": 67,
+      "home_team": "Argelia",
+      "away_team": "Austria",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000468",
+      "match_number": 68,
+      "home_team": "Jordania",
+      "away_team": "Argentina",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000469",
+      "match_number": 69,
+      "home_team": "Colombia",
+      "away_team": "Portugal",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000470",
+      "match_number": 70,
+      "home_team": "RD Congo",
+      "away_team": "Uzbekistán",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000471",
+      "match_number": 71,
+      "home_team": "Panamá",
+      "away_team": "Inglaterra",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000472",
+      "match_number": 72,
+      "home_team": "Croacia",
+      "away_team": "Ghana",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000473",
+      "match_number": 73,
+      "home_team": "Sudáfrica",
+      "away_team": "Canadá",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000474",
+      "match_number": 74,
+      "home_team": "Alemania",
+      "away_team": "Paraguay",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000475",
+      "match_number": 75,
+      "home_team": "Países Bajos",
+      "away_team": "Marruecos",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000476",
+      "match_number": 76,
+      "home_team": "Brasil",
+      "away_team": "Japón",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000477",
+      "match_number": 77,
+      "home_team": "Francia",
+      "away_team": "Suecia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000478",
+      "match_number": 78,
+      "home_team": "Costa de Marfil",
+      "away_team": "Noruega",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000479",
+      "match_number": 79,
+      "home_team": "México",
+      "away_team": "Ecuador",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000480",
+      "match_number": 80,
+      "home_team": "Inglaterra",
+      "away_team": "RD Congo",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000481",
+      "match_number": 81,
+      "home_team": "Estados Unidos",
+      "away_team": "Bosnia y Herzegovina",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000482",
+      "match_number": 82,
+      "home_team": "Bélgica",
+      "away_team": "Senegal",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000483",
+      "match_number": 83,
+      "home_team": "Portugal",
+      "away_team": "Croacia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000484",
+      "match_number": 84,
+      "home_team": "España",
+      "away_team": "Austria",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000485",
+      "match_number": 85,
+      "home_team": "Suiza",
+      "away_team": "Argelia",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000486",
+      "match_number": 86,
+      "home_team": "Argentina",
+      "away_team": "Cabo Verde",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000487",
+      "match_number": 87,
+      "home_team": "Colombia",
+      "away_team": "Ghana",
+      "home_score": null,
+      "away_score": null
+    },
+    {
+      "match_id": "20260000-0000-0000-0000-000000000488",
+      "match_number": 88,
+      "home_team": "Australia",
+      "away_team": "Egipto",
+      "home_score": null,
+      "away_score": null
+    }
+  ]
+}

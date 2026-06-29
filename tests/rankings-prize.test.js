@@ -80,6 +80,7 @@ async function assertRankingFilters() {
   const general = await rankings.calculateRows(false);
   const official = await rankings.calculateRows(true);
   assert.strictEqual(general.length, 3, 'Ranking general incluye todos los usuarios');
+  assert.strictEqual(general[0].captured_predictions, 0, 'Usuarios sin pronósticos tienen 0 capturados');
   assert.strictEqual(official.length, 2, 'Ranking oficial incluye solo pagados');
   assert(official.every(row => row.payment_status === 'PAID'), 'Ranking oficial no incluye no pagados');
   console.log('Ranking general/oficial: OK');
@@ -142,6 +143,7 @@ async function assertScoredMatchesCountEvenIfStatusScheduled() {
   };
   const rankings = loadRankings({ settings, rankingData });
   const rows = await rankings.calculateRows(false);
+  assert.strictEqual(rows[0].captured_predictions, 1, 'Ranking debe contar pronósticos capturados por usuario');
   assert.strictEqual(rows[0].match_points, 3, 'Ranking debe contar partidos capturados con marcador aunque status siga SCHEDULED');
   assert.strictEqual(rows[0].exacts, 1, 'Ranking debe sumar exacto con marcador capturado');
   console.log('Ranking con marcador capturado sin FINISHED: OK');

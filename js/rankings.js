@@ -49,6 +49,7 @@
         match_points: 0,
         special_points: 0,
         total_points: 0,
+        captured_predictions: 0,
         exacts: 0,
         results: 0,
         last_modified: null,
@@ -61,6 +62,8 @@
       const row = byUser[prediction.user_id];
       const match = matchById[prediction.match_id];
       if (!row || !match) return;
+
+      if (prediction.home_score != null && prediction.away_score != null) row.captured_predictions += 1;
 
       const points = matchPoints(prediction, match);
       row.match_points += points.points;
@@ -146,6 +149,7 @@
           <tr>
             <th>Posición</th>
             <th>Usuario</th>
+            <th>Pronósticos capturados</th>
             <th>Pts partidos</th>
             <th>Pts especiales</th>
             <th>Total pts</th>
@@ -159,6 +163,7 @@
           ${rows.map(row => `<tr class="${row.position <= 3 ? `top-${row.position}` : ""}">
             <td class="rank-pos">${positionIcon(row.position)} ${row.position}</td>
             <td>${UI.userChip(row, false)}</td>
+            <td>${row.captured_predictions}</td>
             <td>${row.match_points}</td>
             <td>${row.special_points}</td>
             <td><b>${row.total_points}</b></td>
@@ -185,7 +190,7 @@
         </div>
         <span class="pill">Los empates comparten posición y premio.</span>
       </div>
-      <p class="text-sm text-slate-600 mt-3"><b>Pts partidos</b> son puntos por marcadores pronosticados, no cantidad de partidos. <b>Marcadores exactos</b> es la cantidad de partidos donde atinaste el marcador exacto y <b>Resultados acertados</b> es la cantidad de partidos donde atinaste ganador/empate sin marcador exacto.</p>
+      <p class="text-sm text-slate-600 mt-3"><b>Pronósticos capturados</b> es la cantidad de partidos que el usuario ya guardó con marcador. <b>Pts partidos</b> son puntos por marcadores pronosticados, no cantidad de partidos. <b>Marcadores exactos</b> es la cantidad de partidos donde atinaste el marcador exacto y <b>Resultados acertados</b> es la cantidad de partidos donde atinaste ganador/empate sin marcador exacto.</p>
     </section>
 
     ${renderPrizeSummary(officialOnly ? "Premios reales - Oficial" : "Premios simulados - General", prizes)}
