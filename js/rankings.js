@@ -147,16 +147,16 @@
       <table class="data-table ranking-table">
         <thead>
           <tr>
-            <th>Posición</th>
+            <th>Pos.</th>
             <th>Usuario</th>
-            <th>Pronósticos capturados</th>
+            <th>Capturados</th>
             <th>Pts partidos</th>
             <th>Pts especiales</th>
-            <th>Total pts</th>
-            <th>Marcadores exactos</th>
-            <th>Resultados acertados</th>
+            <th>Total</th>
+            <th>Exactos</th>
+            <th>Resultados</th>
             ${showPaid ? "<th>Pago</th>" : ""}
-            <th>Última modificación</th>
+            <th>Actualizado</th>
           </tr>
         </thead>
         <tbody>
@@ -190,7 +190,7 @@
         </div>
         <span class="pill">Los empates comparten posición y premio.</span>
       </div>
-      <p class="text-sm text-slate-600 mt-3"><b>Pronósticos capturados</b> es la cantidad de partidos que el usuario ya guardó con marcador. <b>Pts partidos</b> son puntos por marcadores pronosticados, no cantidad de partidos. <b>Marcadores exactos</b> es la cantidad de partidos donde atinaste el marcador exacto y <b>Resultados acertados</b> es la cantidad de partidos donde atinaste ganador/empate sin marcador exacto.</p>
+      <p class="text-sm text-slate-600 mt-3"><b>Capturados</b> = pronósticos de partidos guardados con marcador. <b>Pts partidos</b> = puntos por esos pronósticos. <b>Exactos</b> = marcadores exactos atinados. <b>Resultados</b> = ganador/empate atinado sin marcador exacto.</p>
     </section>
 
     ${renderPrizeSummary(officialOnly ? "Premios reales - Oficial" : "Premios simulados - General", prizes)}

@@ -127,3 +127,18 @@ html,body,#app{max-width:100%;overflow-x:hidden}.layout,.page,.card,.admin-secti
 
 /* Disable problematic floating admin headers; keep layout clean */
 .admin-section{overflow:hidden}.admin-section[open]>summary,.standings-shell[open]>summary,.match-group[open]>summary{position:static!important;top:auto!important;z-index:auto!important;box-shadow:none!important;backdrop-filter:none!important;border-radius:0!important}.standings-wrap,.worldcup-groups-shell .table-wrap{max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}.standings-table thead th,.table-wrap .data-table thead th{position:static!important;top:auto!important;z-index:auto!important}.admin-section[open]>summary{background:#f8fafc!important}.standings-shell[open]>summary,.match-group[open]>summary{background:#fff!important}
+
+/* Ranking table: keep labels readable and prevent awkward word breaks. */
+.ranking-table{min-width:980px;table-layout:auto}
+.ranking-table th{white-space:nowrap;word-break:normal;overflow-wrap:normal;line-height:1.15;padding:.78rem .9rem}
+.ranking-table td{vertical-align:middle;word-break:normal;overflow-wrap:normal;padding:.86rem .9rem}
+.ranking-table th:nth-child(1),.ranking-table td:nth-child(1){width:74px;text-align:center;white-space:nowrap}
+.ranking-table th:nth-child(2),.ranking-table td:nth-child(2){min-width:190px}
+.ranking-table th:nth-child(n+3):nth-child(-n+8),.ranking-table td:nth-child(n+3):nth-child(-n+8){text-align:center;white-space:nowrap}
+.ranking-table th:nth-last-child(2),.ranking-table td:nth-last-child(2){text-align:center;white-space:nowrap}
+.ranking-table th:last-child,.ranking-table td:last-child{min-width:150px;white-space:nowrap}
+.ranking-table .user-chip{white-space:nowrap;word-break:normal;overflow-wrap:normal}
+.ranking-table .user-chip b{max-width:128px;white-space:normal;word-break:normal;overflow-wrap:normal}
+.ranking-table .badge{white-space:nowrap;word-break:normal;overflow-wrap:normal;padding:.38rem .68rem}
+.ranking-table .rank-pos{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;white-space:nowrap}
+@media (max-width:760px){.ranking-table{min-width:940px}.ranking-table th,.ranking-table td{padding:.72rem .75rem}.ranking-table th:nth-child(2),.ranking-table td:nth-child(2){min-width:170px}}
