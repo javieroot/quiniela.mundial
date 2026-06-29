@@ -3,16 +3,16 @@
 -- Este seed NO intenta cargar los 1,248 jugadores completos: carga 3 candidatos de campo y 1 portero por selección para especiales.
 -- Requiere ejecutar antes sql/seed_worldcup_2026.sql para que existan tournament y teams.
 -- No toca teams, matches, tournaments ni schema. Solo inserta/actualiza public.players.
+-- Compatible con editores SQL que ejecutan sentencias en sesiones separadas: no usa tablas temporales.
 
 begin;
 
-create temp table pronostix_wc2026_player_seed(
-  team_code text not null,
-  player_name text not null,
-  position text not null check (position in ('GK','FIELD'))
-) on commit drop;
+update public.players
+set is_special_candidate = false
+where tournament_id = '20260000-0000-0000-0000-000000000001';
 
-insert into pronostix_wc2026_player_seed(team_code, player_name, position) values
+with pronostix_wc2026_player_seed(team_code, player_name, position) as (
+  values
 ('MEX', 'Julián Quiñones', 'FIELD'),
 ('MEX', 'Raúl Jiménez', 'FIELD'),
 ('MEX', 'Roberto Alvarado', 'FIELD'),
@@ -204,29 +204,8 @@ insert into pronostix_wc2026_player_seed(team_code, player_name, position) value
 ('CRO', 'Andrej Kramarić', 'FIELD'),
 ('CRO', 'Luka Modrić', 'FIELD'),
 ('CRO', 'Ivan Perišić', 'FIELD'),
-('CRO', 'Dominik Livaković', 'GK');
-
-do $$
-declare
-  missing_codes text;
-begin
-  select string_agg(distinct ps.team_code, ', ' order by ps.team_code)
-  into missing_codes
-  from pronostix_wc2026_player_seed ps
-  left join public.teams t
-    on t.tournament_id = '20260000-0000-0000-0000-000000000001'
-   and t.code = ps.team_code
-  where t.id is null;
-
-  if missing_codes is not null then
-    raise exception 'Faltan equipos para seed_worldcup_2026_players_candidates.sql: %', missing_codes;
-  end if;
-end $$;
-
-update public.players
-set is_special_candidate = false
-where tournament_id = '20260000-0000-0000-0000-000000000001';
-
+('CRO', 'Dominik Livaković', 'GK')
+)
 insert into public.players(tournament_id, team_id, name, position, is_special_candidate)
 select
   '20260000-0000-0000-0000-000000000001'::uuid as tournament_id,
@@ -252,7 +231,7 @@ commit;
 -- Jugadores por selección:
 -- select t.code, t.name, count(p.id) as players_count
 -- from public.teams t
--- left join public.players p on p.team_id = t.id
+-- left join public.players p on p.team_id = t.id and p.is_special_candidate
 -- where t.tournament_id = '20260000-0000-0000-0000-000000000001'
 -- group by t.code, t.name
 -- order by t.code; -- 4 por selección
